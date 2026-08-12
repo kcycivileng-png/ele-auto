@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f6e4f" />
+<title>太陽能模組設備檢查表</title>
+<link rel="manifest" href="../manifest.json" />
+<link rel="icon" href="../icons/icon-192.png" />
+<link rel="apple-touch-icon" href="../icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <button type="button" class="back-btn" id="headerBackBtn">‹</button>
+  <div>
+    <h1>太陽能模組設備檢查表</h1>
+    <div class="subtitle" id="headerSubtitle">附表一・維運報告 子檢查表</div>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 紀錄列表畫面 ================= -->
+  <section id="recordsListView">
+    <button type="button" class="csv-export-all-btn" id="exportAllCsvBtn">
+      📊 匯出全部紀錄 CSV<span class="csv-count" id="csvCount"></span>
+    </button>
+    <button type="button" class="new-record-btn" id="newRecordBtn">＋ 新增一筆</button>
+
+    <div id="recordsList"></div>
+    <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
+
+    <footer class="page-footer">紀錄與照片僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
+
+  <!-- ================= 表單編輯畫面 ================= -->
+  <section id="formEditorView" hidden>
+    <section class="section-card">
+      <h2><span class="num">1</span>基本資料</h2>
+      <div class="field">
+        <label class="field-label">電廠名稱</label>
+        <div style="display:flex;gap:8px;">
+          <select id="f-plantGroup" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;">
+            <option value="">請選擇群組</option>
+          </select>
+          <select id="f-plantSite" style="flex:1.4;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;" disabled>
+            <option value="">請先選群組</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">檢查日期</label>
+        <input type="date" id="f-checkDate" />
+      </div>
+      <div class="field">
+        <label class="field-label">檢查人員</label>
+        <input type="text" id="f-inspector" placeholder="請輸入檢查人員姓名" />
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">2</span>太陽能模組檢查項目</h2>
+      <div id="checklistWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>相片</h2>
+      <div id="photoWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>太陽能模組接地連續性量測</h2>
+      <div class="field">
+        <label class="field-label">該年度量測日期</label>
+        <input type="date" id="f-groundingDate" />
+      </div>
+      <div class="hint" style="margin-bottom:10px;">
+        每499kW/每年抽檢10片，不足499kW依比例計之。第三種接地標準：對地電壓150V以下為100Ω以下，151~300V為50Ω以下，大於301V為10Ω以下。標示不合格請於下方相片欄提供異常照片。表格固定10列，比照原始表單格式。
+      </div>
+      <div id="groundingTableWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">5</span>檢修說明</h2>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;">
+          <input type="checkbox" id="f-noIssue" style="width:18px;height:18px;" /> 無異常
+        </label>
+      </div>
+      <div class="field" id="repairNoteField">
+        <label class="field-label">說明內容</label>
+        <textarea id="f-repairNote" placeholder="請描述檢修內容、原因與處理方式…"></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">6</span>簽名確認</h2>
+      <div class="field">
+        <label class="field-label">維運工程師姓名</label>
+        <input type="text" id="f-engineerName" placeholder="請輸入姓名" />
+      </div>
+      <div class="field" id="sigEngineerWrap"></div>
+
+      <div class="field" style="margin-top:18px;">
+        <label class="field-label">維運主管姓名</label>
+        <input type="text" id="f-supervisorName" placeholder="請輸入姓名" />
+      </div>
+      <div class="field" id="sigSupervisorWrap"></div>
+    </section>
+
+    <div class="draft-status" id="draftStatus">尚未儲存</div>
+    <footer class="page-footer">草稿與照片僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
+</main>
+
+<div class="action-bar" id="editorActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="saveDraftBtn">💾 儲存草稿</button>
+  <button type="button" class="btn btn-primary" id="exportPdfBtn">📄 匯出 PDF</button>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="modal-backdrop" id="missingFieldsModal" hidden>
+  <div class="modal-sheet">
+    <h3>還有欄位未完成</h3>
+    <p class="hint">請先完成以下項目才能匯出 PDF：</p>
+    <ul id="missingFieldsList" style="margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.9;color:#c0392b;"></ul>
+    <button type="button" class="small-btn" style="width:100%;text-align:center;" id="closeMissingModalBtn">我知道了</button>
+  </div>
+</div>
+
+<script src="../vendor/jspdf.umd.min.js"></script>
+<script src="../vendor/html2canvas.min.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/photo.js"></script>
+<script src="../js/signature.js"></script>
+<script src="../js/form-kit.js"></script>
+<script src="../js/pdf-export.js"></script>
+<script src="../js/csv-export.js"></script>
+<script src="../js/share.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/forms/solar-module-check-template.js"></script>
+<script src="../js/forms/solar-module-check.js"></script>
+</body>
+</html>
