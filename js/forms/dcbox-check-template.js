@@ -10,12 +10,15 @@ const DcboxCheckTemplate = (() => {
     plantName: { x: 76.3, y: 114.4 },
     checkDate: { x: 227.4, y: 114.4 },
     inspector: { x: 378.4, y: 114.4 },
-    checkboxCols: { ok: 401, bad: 443.5, fixed: 479 },
-    checkboxSize: 8,
+    // 三欄勾選框的x座標已對齊各欄「欄寬置中」（欄位邊界：397.4~439.4／439.9~474.8／475.3~540.2）
+    checkboxCols: { ok: 413.4, bad: 452.35, fixed: 502.75 },
+    checkboxSize: 10,
     // 2.1 ~ 2.13（手動勾選）+ 2.14組串絕緣電阻量測(年)、2.15接地電阻量測(年)（由量測表自動判定）
-    itemRowY: [183.8, 199.9, 216.0, 232.1, 256.1, 280.0, 296.0, 312.1, 328.3, 344.4, 360.5, 376.6, 392.8, 416.7, 448.3],
-    insulationDate: { x: 248, y: 422.5, w: 145 },
-    groundingDate: { x: 248, y: 454.1, w: 145 },
+    itemRowY: [182.8, 198.9, 215.0, 231.1, 255.1, 279.0, 295.0, 311.1, 327.3, 343.4, 359.5, 375.6, 391.8, 415.7, 447.3],
+    // 「(該年度量測日期:)」整行文字（含括號）在底圖裡已去除，這裡連同日期一起重畫，
+    // 避免底圖文字與疊字圖分開繪製導致基準線對不齊。
+    insulationDateLine: { x: 136.7, y: 422.5, w: 260 },
+    groundingDateLine: { x: 136.7, y: 454.1, w: 260 },
     repairNote: { x: 59.8, y: 533.7, w: 478 },
   };
 
@@ -123,8 +126,8 @@ const DcboxCheckTemplate = (() => {
       ${textDiv(P1.plantName.x, P1.plantName.y, 145, `電廠名稱:${data.meta.plantName}`, { nowrap: true, autofitW: true })}
       ${textDiv(P1.checkDate.x, P1.checkDate.y, 145, `檢查日期：${data.meta.checkDate}`, { nowrap: true, autofitW: true })}
       ${textDiv(P1.inspector.x, P1.inspector.y, 160, `檢查人員：${data.meta.inspector}`, { nowrap: true, autofitW: true })}
-      ${data.insulationDate ? textDiv(P1.insulationDate.x, P1.insulationDate.y, P1.insulationDate.w, data.insulationDate, { nowrap: true, autofitW: true }) : ''}
-      ${data.groundingDate ? textDiv(P1.groundingDate.x, P1.groundingDate.y, P1.groundingDate.w, data.groundingDate, { nowrap: true, autofitW: true }) : ''}
+      ${textDiv(P1.insulationDateLine.x, P1.insulationDateLine.y, P1.insulationDateLine.w, `(該年度量測日期：${data.insulationDate || ''})`, { nowrap: true, autofitW: true })}
+      ${textDiv(P1.groundingDateLine.x, P1.groundingDateLine.y, P1.groundingDateLine.w, `(該年度量測日期：${data.groundingDate || ''})`, { nowrap: true, autofitW: true })}
       ${textDiv(P1.repairNote.x, P1.repairNote.y, P1.repairNote.w, buildRepairNoteText(data), { autofit: true, h: 18 })}
     `;
 
