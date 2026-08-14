@@ -28,10 +28,21 @@
     </button>
     <button type="button" class="new-record-btn" id="newRecordBtn">＋ 新增一筆</button>
 
+    <div class="records-toolbar">
+      <select id="sortSelect">
+        <option value="updated_desc">更新時間：新→舊</option>
+        <option value="updated_asc">更新時間：舊→新</option>
+        <option value="date_desc">檢查日期：新→舊</option>
+        <option value="date_asc">檢查日期：舊→新</option>
+        <option value="plant_asc">電廠名稱：A→Z</option>
+      </select>
+      <input type="text" id="filterInput" placeholder="搜尋電廠名稱或檢查人員…" />
+    </div>
+
     <div id="recordsList"></div>
     <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
 
-    <footer class="page-footer">紀錄與照片僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+    <footer class="page-footer">紀錄與照片僅儲存在本機裝置，不會上傳至任何伺服器。<br />版本 <span id="appVersion"></span></footer>
   </section>
 
   <!-- ================= 表單編輯畫面 ================= -->
@@ -67,7 +78,7 @@
     <section class="section-card">
       <h2><span class="num">3</span>相片</h2>
       <div class="hint" style="margin-bottom:10px;">
-        匯出PDF時，照片會依表格框格比例（較寬扁）自動裁切置中，建議拍攝時把重點對象放在畫面正中央，避免上下或左右被裁掉。
+        匯出PDF時，照片會完整縮放置入表格框格（不裁切內容），因框格較寬扁，上下或左右可能會有留白屬正常現象。
       </div>
       <div id="photoWrap"></div>
     </section>
@@ -129,5 +140,12 @@
 <script src="../js/app.js"></script>
 <script src="../js/forms/solar-module-check-template.js"></script>
 <script src="../js/forms/solar-module-check.js"></script>
+<script>
+  fetch('../service-worker.js').then((r) => r.text()).then((t) => {
+    const m = t.match(/CACHE_VERSION\s*=\s*'([^']+)'/);
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = m ? m[1] : '未知';
+  }).catch(() => {});
+</script>
 </body>
 </html>

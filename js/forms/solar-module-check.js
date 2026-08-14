@@ -38,6 +38,8 @@
     newRecordBtn: document.getElementById('newRecordBtn'),
     exportAllCsvBtn: document.getElementById('exportAllCsvBtn'),
     csvCount: document.getElementById('csvCount'),
+    sortSelect: document.getElementById('sortSelect'),
+    filterInput: document.getElementById('filterInput'),
 
     plantGroup: document.getElementById('f-plantGroup'),
     plantSite: document.getElementById('f-plantSite'),
@@ -211,12 +213,54 @@
     showEditorView(KtDB.newRecordId(FORM_ID), true);
   });
 
+  els.sortSelect.addEventListener('change', () => renderRecordsList());
+  let filterDebounce = null;
+  els.filterInput.addEventListener('input', () => {
+    clearTimeout(filterDebounce);
+    filterDebounce = setTimeout(() => renderRecordsList(), 200);
+  });
+
+  function sortRecords(records, sortKey) {
+    const arr = records.slice();
+    switch (sortKey) {
+      case 'updated_asc':
+        return arr.sort((a, b) => a.updatedAt - b.updatedAt);
+      case 'date_desc':
+        return arr.sort((a, b) => (b.data?.meta?.checkDate || '').localeCompare(a.data?.meta?.checkDate || ''));
+      case 'date_asc':
+        return arr.sort((a, b) => (a.data?.meta?.checkDate || '').localeCompare(b.data?.meta?.checkDate || ''));
+      case 'plant_asc':
+        return arr.sort((a, b) => (a.data?.meta?.plantName || '').localeCompare(b.data?.meta?.plantName || '', 'zh-Hant'));
+      case 'updated_desc':
+      default:
+        return arr.sort((a, b) => b.updatedAt - a.updatedAt);
+    }
+  }
+
+  function filterRecords(records, keyword) {
+    const kw = keyword.trim().toLowerCase();
+    if (!kw) return records;
+    return records.filter((rec) => {
+      const plant = (rec.data?.meta?.plantName || '').toLowerCase();
+      const inspector = (rec.data?.meta?.inspector || '').toLowerCase();
+      return plant.includes(kw) || inspector.includes(kw);
+    });
+  }
+
   async function renderRecordsList() {
-    const records = await KtDB.listRecords(FORM_ID);
+    const allRecords = await KtDB.listRecords(FORM_ID);
+    const filtered = filterRecords(allRecords, els.filterInput.value);
+    const records = sortRecords(filtered, els.sortSelect.value);
     els.recordsList.innerHTML = '';
-    els.emptyState.hidden = records.length > 0;
-    els.exportAllCsvBtn.disabled = records.length === 0;
-    els.csvCount.textContent = records.length ? `（共 ${records.length} 筆）` : '';
+    els.emptyState.hidden = allRecords.length > 0;
+    els.exportAllCsvBtn.disabled = allRecords.length === 0;
+    els.csvCount.textContent = allRecords.length ? `（共 ${allRecords.length} 筆）` : '';
+    if (allRecords.length > 0 && records.length === 0) {
+      els.emptyState.hidden = false;
+      els.emptyState.textContent = '沒有符合搜尋條件的紀錄。';
+    } else {
+      els.emptyState.textContent = '尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。';
+    }
 
     records.forEach((rec) => {
       const card = document.createElement('div');
@@ -448,6 +492,7 @@
       const T = SolarModuleCheckTemplate;
       // 只輸出Word原始頁面（P16~P19），不額外發明附錄頁——照片直接疊進P17/P18/P19
       // 對應的相片框格座標，簽名則不屬於這張表單（印在「定檢項目列表」封面頁）。
+      // 表單頁數固定比照原始Word結構，一律輸出全部4頁（原文件本來就是「無使用則不刪減表格」）。
       const pages = [
         T.buildPage1(data, bg.p1),
         T.buildPagePhotos(data, bg.p2),

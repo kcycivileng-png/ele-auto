@@ -112,7 +112,7 @@ const KtPdf = (() => {
     );
   }
 
-  async function renderTextOverlay(html, pageW, pageH) {
+  async function renderTextOverlay(html, pageW, pageH, scale) {
     const host = document.createElement('div');
     host.style.position = 'fixed';
     host.style.left = '-9999px';
@@ -124,7 +124,8 @@ const KtPdf = (() => {
     document.body.appendChild(host);
     await waitForImages(host);
     autofitCells(host);
-    const canvas = await html2canvas(host, { scale: 2, backgroundColor: null, width: pageW, height: pageH });
+    // scale 要跟底圖合成畫布的解析度一致，不然疊字圖解析度較低，合成後文字會比底圖模糊。
+    const canvas = await html2canvas(host, { scale: scale || 2, backgroundColor: null, width: pageW, height: pageH });
     document.body.removeChild(host);
     return canvas;
   }
@@ -222,7 +223,7 @@ const KtPdf = (() => {
       }
 
       if (page.textHtml) {
-        const textCanvas = await renderTextOverlay(page.textHtml, page.pageW, page.pageH);
+        const textCanvas = await renderTextOverlay(page.textHtml, page.pageW, page.pageH, scale);
         ctx.drawImage(textCanvas, 0, 0, canvas.width, canvas.height);
       }
 
