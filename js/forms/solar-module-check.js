@@ -14,12 +14,12 @@
   ];
 
   const PHOTO_GROUPS = [
-    { id: 'rack', title: '檢查項目-模組支架 (拍攝支架)', hint: '拍攝支架整體狀況' },
-    { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)', hint: '拍攝壓塊固定狀況' },
-    { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)', hint: '可拍多張，呈現髒污程度' },
-    { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)', hint: '呈現整體狀況，空拍圖佳' },
-    { id: 'thermal', title: '檢查項目-太陽能模組熱顯像 (異常時提供)', hint: '含熱顯像相片＋白光對照相片' },
-    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', hint: '判定不合格時提供，請標示迴路編號' },
+    { id: 'rack', title: '檢查項目-模組支架 (拍攝支架)' },
+    { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)' },
+    { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)' },
+    { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)' },
+    { id: 'thermal', title: '檢查項目-太陽能模組熱顯像 (異常時提供)' },
+    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)' },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };
@@ -44,8 +44,6 @@
     noIssue: document.getElementById('f-noIssue'),
     repairNote: document.getElementById('f-repairNote'),
     repairNoteField: document.getElementById('repairNoteField'),
-    engineerName: document.getElementById('f-engineerName'),
-    supervisorName: document.getElementById('f-supervisorName'),
     draftStatus: document.getElementById('draftStatus'),
     toast: document.getElementById('toast'),
   };
@@ -122,7 +120,7 @@
     photoCtrls[g.id] = KtPhoto.createPhotoGroup(photoWrap, {
       id: g.id,
       title: g.title,
-      hint: g.hint,
+      single: true,
       onChange: () => scheduleAutosave(),
     });
   });
@@ -137,14 +135,6 @@
       { key: 'result', label: '結果', type: 'select', options: ['合格', '不合格'] },
       { key: 'action', label: '改善對策', type: 'text' },
     ],
-  });
-
-  // ---- 建立簽名 ----
-  const sigEngineer = KtSignature.createSignaturePad(document.getElementById('sigEngineerWrap'), {
-    onChange: () => scheduleAutosave(),
-  });
-  const sigSupervisor = KtSignature.createSignaturePad(document.getElementById('sigSupervisorWrap'), {
-    onChange: () => scheduleAutosave(),
   });
 
   // ---- 無異常勾選連動 ----
@@ -182,7 +172,6 @@
       groundingRows: [],
       repairNote: { noIssue: false, text: '' },
       photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
-      signatures: { engineer: { name: '', dataUrl: null }, supervisor: { name: '', dataUrl: null } },
     };
   }
 
@@ -192,11 +181,6 @@
     els.formEditorView.hidden = false;
     els.editorActionBar.hidden = false;
     els.headerBackBtn.dataset.mode = 'list';
-
-    // 簽名畫布只有在容器「可見」時量測寬度才會正確，容器從 hidden 變顯示後
-    // 必須重新量測一次，否則畫布尺寸會停留在建立當下（仍隱藏、寬度為0）的錯誤狀態。
-    sigEngineer.resize();
-    sigSupervisor.resize();
 
     if (isNew) {
       applyFormData(blankFormData());
@@ -265,7 +249,7 @@
   }
 
   // 複製紀錄：只複製文字/勾選欄位（含電廠名稱、日期、人員、檢查項目、接地量測數據、
-  // 檢修說明、簽名人姓名），不複製照片與簽名筆跡——避免誤用到別次的現場照片/簽名。
+  // 檢修說明），不複製照片——避免誤用到別次的現場照片。
   async function duplicateRecord(rec) {
     const src = rec.data || {};
     const copied = {
@@ -276,14 +260,10 @@
       groundingRows: (src.groundingRows || []).map((r) => ({ ...r })),
       repairNote: { ...src.repairNote },
       photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
-      signatures: {
-        engineer: { name: src.signatures?.engineer?.name || '', dataUrl: null },
-        supervisor: { name: src.signatures?.supervisor?.name || '', dataUrl: null },
-      },
     };
     const newId = KtDB.newRecordId(FORM_ID);
     await KtDB.saveRecord(newId, FORM_ID, copied);
-    showToast('已複製為新紀錄（不含照片與簽名）');
+    showToast('已複製為新紀錄（不含照片）');
     showEditorView(newId, false);
   }
 
@@ -306,10 +286,6 @@
         text: els.repairNote.value.trim(),
       },
       photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: photoCtrls[g.id].getPhotos() })),
-      signatures: {
-        engineer: { name: els.engineerName.value.trim(), dataUrl: sigEngineer.toDataURL() },
-        supervisor: { name: els.supervisorName.value.trim(), dataUrl: sigSupervisor.toDataURL() },
-      },
     };
   }
 
@@ -321,8 +297,6 @@
     els.noIssue.checked = !!data.repairNote?.noIssue;
     els.repairNote.value = data.repairNote?.text || '';
     applyNoIssueUI();
-    els.engineerName.value = data.signatures?.engineer?.name || '';
-    els.supervisorName.value = data.signatures?.supervisor?.name || '';
 
     checklistCtrls.forEach(({ ctrl }, idx) => {
       const saved = (data.items || []).find((it) => it.no === CHECK_ITEMS[idx].no);
@@ -335,11 +309,6 @@
       const saved = (data.photoGroups || []).find((x) => x.id === g.id);
       photoCtrls[g.id].setPhotos(saved ? saved.photos : []);
     });
-
-    sigEngineer.clear();
-    sigSupervisor.clear();
-    if (data.signatures?.engineer?.dataUrl) sigEngineer.loadDataURL(data.signatures.engineer.dataUrl);
-    if (data.signatures?.supervisor?.dataUrl) sigSupervisor.loadDataURL(data.signatures.supervisor.dataUrl);
   }
 
   // ======================================================================
@@ -429,11 +398,12 @@
     return parts.join('_') + '.' + ext;
   }
 
-  // 底圖只需要載入一次，快取起來給每次匯出重複使用
+  // 底圖只需要載入一次，快取起來給每次匯出重複使用（對應原始文件P16~P19）
   const TEMPLATE_BG_PATHS = {
     p1: '../pdf-templates/solar-module-check-p1.png',
-    p2: '../pdf-templates/solar-module-check-p2.png',
-    p3: '../pdf-templates/solar-module-check-p3.png',
+    p2: '../pdf-templates/solar-module-check-p2-photos.png',
+    p3: '../pdf-templates/solar-module-check-p3-thermal.png',
+    p4: '../pdf-templates/solar-module-check-p4-grounding.png',
   };
   let bgCachePromise = null;
   function loadBackgrounds() {
@@ -472,11 +442,13 @@
       const data = gatherFormData();
       const bg = await loadBackgrounds();
       const T = SolarModuleCheckTemplate;
+      // 只輸出Word原始頁面（P16~P19），不額外發明附錄頁——照片直接疊進P17/P18/P19
+      // 對應的相片框格座標，簽名則不屬於這張表單（印在「定檢項目列表」封面頁）。
       const pages = [
         T.buildPage1(data, bg.p1),
-        T.buildPage2(bg.p2),
-        T.buildPage3(data, bg.p3),
-        T.buildAppendixPage(data, PHOTO_GROUPS.map((g) => ({ title: g.title, photos: data.photoGroups.find((x) => x.id === g.id).photos }))),
+        T.buildPagePhotos(data, bg.p2),
+        T.buildPageThermal(data, bg.p3),
+        T.buildPageGrounding(data, bg.p4),
       ];
       const blob = await KtPdf.renderTemplatedPdf(pages);
       await KtShare.shareOrSavePdf(blob, buildFilename(data, 'pdf'));
@@ -503,7 +475,7 @@
     ...CHECK_ITEMS.flatMap((it) => [`${it.no}狀態`, `${it.no}備註`]),
     '接地量測日期',
     ...Array.from({ length: GROUNDING_ROWS }, (_, i) => [`迴路${i + 1}編號`, `迴路${i + 1}測量值(Ω)`, `迴路${i + 1}結果`, `迴路${i + 1}改善對策`]).flat(),
-    '檢修說明', '維運工程師', '維運主管', '紀錄建立時間', '最後更新時間',
+    '檢修說明', '紀錄建立時間', '最後更新時間',
   ];
 
   function recordToCsvRow(record) {
@@ -527,8 +499,6 @@
       d.groundingDate || '',
       ...grounding,
       repairText,
-      d.signatures?.engineer?.name || '',
-      d.signatures?.supervisor?.name || '',
       fmtTs(record.createdAt),
       fmtTs(record.updatedAt),
     ];

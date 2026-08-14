@@ -156,6 +156,26 @@ const KtPdf = (() => {
     });
   }
 
+  // 把照片「填滿」目標框格並裁切多餘部分（object-fit:cover 的邏輯），
+  // 避免直接拉伸變形——手機拍的照片長寬比通常跟原始表格的相片框格對不起來。
+  function drawImageCover(ctx, img, dx, dy, dw, dh) {
+    const srcRatio = img.width / img.height;
+    const dstRatio = dw / dh;
+    let sx, sy, sw, sh;
+    if (srcRatio > dstRatio) {
+      sh = img.height;
+      sw = sh * dstRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / dstRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
   // 重點：jsPDF 內嵌「帶透明背景的PNG」時幾乎不會壓縮（實測一張疊字圖從 <100KB 的
   // canvas 資料膨脹成嵌入PDF後 5~7MB），推測是它把RGB+透明遮罩拆成兩張點陣圖分別存，
   // 沒有妥善套用壓縮。解法是自己在canvas上把底圖、勾選框、疊字圖、照片都合成到
@@ -195,7 +215,9 @@ const KtPdf = (() => {
 
       for (const im of page.images || []) {
         const img = await loadImage(im.dataUrl);
-        ctx.drawImage(img, im.x * scale, im.y * scale, im.w * scale, im.h * scale);
+        // cover 模式填滿整個框格並裁切多餘部分，順便完全蓋掉底圖裡原本的說明文字
+        // （例如"(支架)"），不需要另外畫白色遮蓋。
+        drawImageCover(ctx, img, im.x * scale, im.y * scale, im.w * scale, im.h * scale);
       }
 
       if (page.textHtml) {

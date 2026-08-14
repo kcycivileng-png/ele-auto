@@ -37,7 +37,8 @@ const KtPhoto = (() => {
 
   /**
    * @param {HTMLElement} container
-   * @param {{id:string, title:string, hint?:string, onChange?:Function}} opts
+   * @param {{id:string, title:string, hint?:string, single?:boolean, onChange?:Function}} opts
+   *   single: true 時只能有一張照片，選新的會直接取代舊的（不需要先手動刪除）。
    */
   function createPhotoGroup(container, opts) {
     const wrap = document.createElement('div');
@@ -47,8 +48,8 @@ const KtPhoto = (() => {
       ${opts.hint ? `<div class="hint">${opts.hint}</div>` : ''}
       <div class="photo-thumbs"></div>
       <label class="photo-add-btn">
-        📷 新增照片
-        <input type="file" accept="image/*" multiple style="display:none" />
+        📷 ${opts.single ? '拍照/選取照片' : '新增照片'}
+        <input type="file" accept="image/*" ${opts.single ? '' : 'multiple'} style="display:none" />
       </label>
     `;
     container.appendChild(wrap);
@@ -74,12 +75,23 @@ const KtPhoto = (() => {
 
     input.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
-      for (const file of files) {
-        try {
-          const dataUrl = await compressFile(file);
-          photos.push(dataUrl);
-        } catch (err) {
-          console.warn('photo compress failed', err);
+      if (opts.single) {
+        const file = files[0];
+        if (file) {
+          try {
+            photos = [await compressFile(file)];
+          } catch (err) {
+            console.warn('photo compress failed', err);
+          }
+        }
+      } else {
+        for (const file of files) {
+          try {
+            const dataUrl = await compressFile(file);
+            photos.push(dataUrl);
+          } catch (err) {
+            console.warn('photo compress failed', err);
+          }
         }
       }
       input.value = '';

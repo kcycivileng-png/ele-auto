@@ -66,6 +66,9 @@
 
     <section class="section-card">
       <h2><span class="num">3</span>相片</h2>
+      <div class="hint" style="margin-bottom:10px;">
+        匯出PDF時，照片會依表格框格比例（較寬扁）自動裁切置中，建議拍攝時把重點對象放在畫面正中央，避免上下或左右被裁掉。
+      </div>
       <div id="photoWrap"></div>
     </section>
 
@@ -94,21 +97,6 @@
       </div>
     </section>
 
-    <section class="section-card">
-      <h2><span class="num">6</span>簽名確認</h2>
-      <div class="field">
-        <label class="field-label">維運工程師姓名</label>
-        <input type="text" id="f-engineerName" placeholder="請輸入姓名" />
-      </div>
-      <div class="field" id="sigEngineerWrap"></div>
-
-      <div class="field" style="margin-top:18px;">
-        <label class="field-label">維運主管姓名</label>
-        <input type="text" id="f-supervisorName" placeholder="請輸入姓名" />
-      </div>
-      <div class="field" id="sigSupervisorWrap"></div>
-    </section>
-
     <div class="draft-status" id="draftStatus">尚未儲存</div>
     <footer class="page-footer">草稿與照片僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
   </section>
@@ -134,7 +122,6 @@
 <script src="../vendor/html2canvas.min.js"></script>
 <script src="../js/db.js"></script>
 <script src="../js/photo.js"></script>
-<script src="../js/signature.js"></script>
 <script src="../js/form-kit.js"></script>
 <script src="../js/pdf-export.js"></script>
 <script src="../js/csv-export.js"></script>
