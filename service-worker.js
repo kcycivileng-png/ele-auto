@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.7.1';
+const CACHE_VERSION = 'v1.8.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -30,6 +30,19 @@ const CORE_ASSETS = [
   './pdf-templates/dcbox-check-p2-thermal.png',
   './pdf-templates/dcbox-check-p3-insulation.png',
   './pdf-templates/dcbox-check-p4-grounding.png',
+  './forms/acbox-check.html',
+  './js/forms/acbox-check.js',
+  './js/forms/acbox-check-template.js',
+  './pdf-templates/acbox-check-p1.png',
+  './pdf-templates/acbox-check-p2-thermal.png',
+  './pdf-templates/acbox-check-p3-insulation.png',
+  './pdf-templates/acbox-check-p4-grounding.png',
+  './forms/inverter-check.html',
+  './js/forms/inverter-check.js',
+  './js/forms/inverter-check-template.js',
+  './pdf-templates/inverter-check-p1.png',
+  './pdf-templates/inverter-check-p2-photos.png',
+  './pdf-templates/inverter-check-p3-grounding.png',
   './vendor/jspdf.umd.min.js',
   './vendor/html2canvas.min.js',
   './icons/icon-192.png',

@@ -77,12 +77,17 @@ const KtFormKit = (() => {
       container.appendChild(addBtn);
     }
 
-    function addRow(values) {
+    function addRow(values, rowIndex) {
       values = values || {};
       const tr = document.createElement('tr');
       opts.columns.forEach((col) => {
         const td = document.createElement('td');
-        if (col.type === 'select') {
+        if (col.type === 'label') {
+          // 固定列標題（例如R-S/S-T這種相別），不可編輯，只是把Word原表格的欄位結構
+          // 原樣呈現在畫面上；資料不用存進getRows()，因為欄位順序本身就是固定的。
+          td.textContent = (col.labels && col.labels[rowIndex]) || '';
+          td.className = 'mtable-label-cell';
+        } else if (col.type === 'select') {
           const sel = document.createElement('select');
           col.options.forEach((o) => {
             const optEl = document.createElement('option');
@@ -126,7 +131,7 @@ const KtFormKit = (() => {
     tbody.addEventListener('change', () => opts.onChange && opts.onChange());
 
     const initialRows = isFixed ? opts.fixedRows : (opts.minRows || 1);
-    for (let i = 0; i < initialRows; i++) addRow();
+    for (let i = 0; i < initialRows; i++) addRow(undefined, i);
 
     return {
       getRows: () =>
@@ -141,9 +146,9 @@ const KtFormKit = (() => {
         tbody.innerHTML = '';
         const src = rows || [];
         if (isFixed) {
-          for (let i = 0; i < opts.fixedRows; i++) addRow(src[i]);
+          for (let i = 0; i < opts.fixedRows; i++) addRow(src[i], i);
         } else {
-          (src.length ? src : [{}]).forEach((r) => addRow(r));
+          (src.length ? src : [{}]).forEach((r, i) => addRow(r, i));
         }
       },
     };

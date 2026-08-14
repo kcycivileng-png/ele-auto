@@ -361,6 +361,7 @@ main {
 }
 .mtable input:focus { outline: 1px solid var(--green-500); border-radius: 4px; }
 .mtable-wrap { overflow-x: auto; }
+.mtable-label-cell { background: var(--green-100); font-weight: 600; font-size: 12px; }
 .mtable .rm-row-btn {
   border: none;
   background: none;
