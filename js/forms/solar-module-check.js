@@ -13,13 +13,16 @@
     { no: '1.7', label: '1.7 模組溫度是否正常(熱顯像)' },
   ];
 
+  // max：對應原始表格裡實際的框格數量（太陽能板(近)原始有4格、(遠)有2格），
+  // 沒有 max 的欄位維持單張（rack/clamp各1格；thermal/groundAbn屬於「異常才提供」的證據照，
+  // 原始表格雖有多格但App只要求異常時至少附1張）。
   const PHOTO_GROUPS = [
-    { id: 'rack', title: '檢查項目-模組支架 (拍攝支架)' },
-    { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)' },
-    { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)' },
-    { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)' },
-    { id: 'thermal', title: '檢查項目-太陽能模組熱顯像 (異常時提供)' },
-    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)' },
+    { id: 'rack', title: '檢查項目-模組支架 (拍攝支架)', single: true },
+    { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)', single: true },
+    { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)', max: 4 },
+    { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)', max: 2 },
+    { id: 'thermal', title: '檢查項目-太陽能模組熱顯像 (異常時提供)', single: true },
+    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', single: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };
@@ -120,7 +123,8 @@
     photoCtrls[g.id] = KtPhoto.createPhotoGroup(photoWrap, {
       id: g.id,
       title: g.title,
-      single: true,
+      single: g.single,
+      max: g.max,
       onChange: () => scheduleAutosave(),
     });
   });

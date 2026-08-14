@@ -37,26 +37,34 @@ const KtPhoto = (() => {
 
   /**
    * @param {HTMLElement} container
-   * @param {{id:string, title:string, hint?:string, single?:boolean, onChange?:Function}} opts
+   * @param {{id:string, title:string, hint?:string, single?:boolean, max?:number, onChange?:Function}} opts
    *   single: true 時只能有一張照片，選新的會直接取代舊的（不需要先手動刪除）。
+   *   max: 上限張數（例如原始表格裡「太陽能板(近)」實際有4格，就設 max:4），
+   *        超過上限的部分會被忽略，並在按鈕旁顯示「目前張數/上限」。
    */
   function createPhotoGroup(container, opts) {
     const wrap = document.createElement('div');
     wrap.className = 'photo-group';
+    const isMulti = !opts.single;
     wrap.innerHTML = `
       <div class="pg-title">${opts.title}</div>
       ${opts.hint ? `<div class="hint">${opts.hint}</div>` : ''}
       <div class="photo-thumbs"></div>
       <label class="photo-add-btn">
-        📷 ${opts.single ? '拍照/選取照片' : '新增照片'}
-        <input type="file" accept="image/*" ${opts.single ? '' : 'multiple'} style="display:none" />
+        📷 ${opts.single ? '拍照/選取照片' : '新增照片'}${opts.max ? `<span class="pg-count"></span>` : ''}
+        <input type="file" accept="image/*" ${isMulti ? 'multiple' : ''} style="display:none" />
       </label>
     `;
     container.appendChild(wrap);
 
     const thumbsEl = wrap.querySelector('.photo-thumbs');
     const input = wrap.querySelector('input[type=file]');
+    const countEl = wrap.querySelector('.pg-count');
     let photos = []; // array of dataURL strings
+
+    function updateCountLabel() {
+      if (countEl) countEl.textContent = `（${photos.length}/${opts.max}）`;
+    }
 
     function render() {
       thumbsEl.innerHTML = '';
@@ -71,6 +79,8 @@ const KtPhoto = (() => {
         });
         thumbsEl.appendChild(t);
       });
+      updateCountLabel();
+      if (opts.max) input.parentElement.style.display = photos.length >= opts.max ? 'none' : '';
     }
 
     input.addEventListener('change', async (e) => {
@@ -85,7 +95,8 @@ const KtPhoto = (() => {
           }
         }
       } else {
-        for (const file of files) {
+        const remaining = opts.max ? Math.max(0, opts.max - photos.length) : files.length;
+        for (const file of files.slice(0, remaining)) {
           try {
             const dataUrl = await compressFile(file);
             photos.push(dataUrl);
@@ -98,6 +109,8 @@ const KtPhoto = (() => {
       render();
       opts.onChange && opts.onChange(photos);
     });
+
+    render();
 
     return {
       getPhotos: () => photos.slice(),

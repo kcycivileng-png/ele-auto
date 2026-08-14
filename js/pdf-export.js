@@ -156,24 +156,23 @@ const KtPdf = (() => {
     });
   }
 
-  // 把照片「填滿」目標框格並裁切多餘部分（object-fit:cover 的邏輯），
-  // 避免直接拉伸變形——手機拍的照片長寬比通常跟原始表格的相片框格對不起來。
-  function drawImageCover(ctx, img, dx, dy, dw, dh) {
+  // 把照片「完整縮放進」目標框格，維持原始長寬比、不裁切任何內容（object-fit:contain
+  // 的邏輯）——現場照片是稽核證據，不能因為框格比例不同就被裁掉一部分。多出來的空間
+  // 置中留白（框格底色本來就是白的，不會顯得突兀）。
+  function drawImageContain(ctx, img, dx, dy, dw, dh) {
     const srcRatio = img.width / img.height;
     const dstRatio = dw / dh;
-    let sx, sy, sw, sh;
+    let w, h;
     if (srcRatio > dstRatio) {
-      sh = img.height;
-      sw = sh * dstRatio;
-      sx = (img.width - sw) / 2;
-      sy = 0;
+      w = dw;
+      h = dw / srcRatio;
     } else {
-      sw = img.width;
-      sh = sw / dstRatio;
-      sx = 0;
-      sy = (img.height - sh) / 2;
+      h = dh;
+      w = dh * srcRatio;
     }
-    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    const x = dx + (dw - w) / 2;
+    const y = dy + (dh - h) / 2;
+    ctx.drawImage(img, x, y, w, h);
   }
 
   // 重點：jsPDF 內嵌「帶透明背景的PNG」時幾乎不會壓縮（實測一張疊字圖從 <100KB 的
@@ -215,9 +214,11 @@ const KtPdf = (() => {
 
       for (const im of page.images || []) {
         const img = await loadImage(im.dataUrl);
-        // cover 模式填滿整個框格並裁切多餘部分，順便完全蓋掉底圖裡原本的說明文字
-        // （例如"(支架)"），不需要另外畫白色遮蓋。
-        drawImageCover(ctx, img, im.x * scale, im.y * scale, im.w * scale, im.h * scale);
+        // contain 模式不一定會填滿整個框格（可能上下或左右留白），
+        // 所以要先畫白色蓋掉底圖裡原本的說明文字（例如"(支架)"），避免露出來跟照片重疊。
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(im.x * scale, im.y * scale, im.w * scale, im.h * scale);
+        drawImageContain(ctx, img, im.x * scale, im.y * scale, im.w * scale, im.h * scale);
       }
 
       if (page.textHtml) {

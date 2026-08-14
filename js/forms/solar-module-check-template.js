@@ -24,13 +24,23 @@ const SolarModuleCheckTemplate = (() => {
   };
 
   // P17 相片框格頁：只用得到「模組支架/模組壓塊/太陽能板近拍/太陽能板遠拍」這4個
-  // App裡真的有蒐集的欄位，各自對應原始表格裡第一個同名框格；重複的近拍/異常項目框格
-  // 維持原樣不疊照片（App設計是每類只拍一張，不需要多張）。
+  // App裡的相片欄位跟原始表格框格數量一一對應：模組支架/模組壓塊各1格，
+  // 太陽能板(近)4格、太陽能板(遠)2格。異常項目那2格保留給人工事後補充，不由App填入。
+  const LEFT_X = 58.2, LEFT_W = 224.0;
+  const RIGHT_X = 293.0, RIGHT_W = 244.5;
   const P_PHOTOS = {
-    rack: { x: 58.2, y: 104.1, w: 224.0, h: 113.5 },
-    clamp: { x: 293.0, y: 104.1, w: 244.5, h: 113.5 },
-    near: { x: 58.2, y: 234.2, w: 224.0, h: 113.4 },
-    far: { x: 58.2, y: 494.2, w: 224.0, h: 113.5 },
+    rack: [{ x: LEFT_X, y: 104.1, w: LEFT_W, h: 113.5 }],
+    clamp: [{ x: RIGHT_X, y: 104.1, w: RIGHT_W, h: 113.5 }],
+    near: [
+      { x: LEFT_X, y: 234.2, w: LEFT_W, h: 113.4 },
+      { x: RIGHT_X, y: 234.2, w: RIGHT_W, h: 113.4 },
+      { x: LEFT_X, y: 364.1, w: LEFT_W, h: 113.4 },
+      { x: RIGHT_X, y: 364.1, w: RIGHT_W, h: 113.4 },
+    ],
+    far: [
+      { x: LEFT_X, y: 494.2, w: LEFT_W, h: 113.5 },
+      { x: RIGHT_X, y: 494.2, w: RIGHT_W, h: 113.5 },
+    ],
   };
 
   // P18 熱顯像頁：對應「檢查項目-異常位置1」的「太陽能板熱顯像相片」框格
@@ -83,6 +93,11 @@ const SolarModuleCheckTemplate = (() => {
     return g && g.photos && g.photos[0] ? g.photos[0] : null;
   }
 
+  function photosOf(data, id) {
+    const g = (data.photoGroups || []).find((x) => x.id === id);
+    return (g && g.photos) || [];
+  }
+
   // ---- Page 1（P16）：太陽能模組設備檢查表 ----
   function buildPage1(data, bgDataUrl) {
     const rects = [];
@@ -110,11 +125,13 @@ const SolarModuleCheckTemplate = (() => {
   function buildPagePhotos(data, bgDataUrl) {
     const images = [];
     Object.keys(P_PHOTOS).forEach((id) => {
-      const photo = photoOf(data, id);
-      if (photo) {
-        const box = P_PHOTOS[id];
+      const boxes = P_PHOTOS[id];
+      const photos = photosOf(data, id);
+      photos.forEach((photo, idx) => {
+        const box = boxes[idx];
+        if (!box) return; // 拍的張數超過原始框格數量時，多的不畫（理論上UI已經擋住了）
         images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
-      }
+      });
     });
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
   }
