@@ -226,6 +226,25 @@ main {
   line-height: 1.5;
 }
 
+/* 障礙來源這類多選核取方塊（附表二/附表三用） */
+.checkbox-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+.checkbox-grid label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--ink-900);
+}
+.checkbox-grid input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* checklist item */
 .checklist-item {
   border: 1px solid var(--line);
@@ -281,6 +300,15 @@ main {
   margin-top: 10px;
 }
 .item-remark[hidden] { display: none; }
+
+/* 附表五/六/七這類「正常/異常」兩態檢查表的分組標題 */
+.checklist-group-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-700);
+  margin: 16px 0 6px;
+}
+.checklist-group-header:first-child { margin-top: 0; }
 
 /* photo group */
 .photo-group {

@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.8.0';
+const CACHE_VERSION = 'v1.11.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -43,6 +43,30 @@ const CORE_ASSETS = [
   './pdf-templates/inverter-check-p1.png',
   './pdf-templates/inverter-check-p2-photos.png',
   './pdf-templates/inverter-check-p3-grounding.png',
+  './forms/report2-check.html',
+  './js/forms/report2-check.js',
+  './js/forms/report2-check-template.js',
+  './pdf-templates/report2-p1.png',
+  './forms/report3-check.html',
+  './js/forms/report3-check.js',
+  './js/forms/report3-check-template.js',
+  './pdf-templates/report3-p1.png',
+  './forms/report4-check.html',
+  './js/forms/report4-check.js',
+  './js/forms/report4-check-template.js',
+  './pdf-templates/report4-p1.png',
+  './forms/report5-check.html',
+  './js/forms/report5-check.js',
+  './js/forms/report5-check-template.js',
+  './pdf-templates/report5-p1.png',
+  './forms/report6-check.html',
+  './js/forms/report6-check.js',
+  './js/forms/report6-check-template.js',
+  './pdf-templates/report6-p1.png',
+  './forms/report7-check.html',
+  './js/forms/report7-check.js',
+  './js/forms/report7-check-template.js',
+  './pdf-templates/report7-p1.png',
   './vendor/jspdf.umd.min.js',
   './vendor/html2canvas.min.js',
   './icons/icon-192.png',

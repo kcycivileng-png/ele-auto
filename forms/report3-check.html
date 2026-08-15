@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f6e4f" />
+<title>電廠損壞報告</title>
+<link rel="manifest" href="../manifest.json" />
+<link rel="icon" href="../icons/icon-192.png" />
+<link rel="apple-touch-icon" href="../icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <button type="button" class="back-btn" id="headerBackBtn">‹</button>
+  <div>
+    <h1>電廠損壞報告</h1>
+    <div class="subtitle" id="headerSubtitle">附表三・電廠損壞時填寫</div>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 紀錄列表畫面 ================= -->
+  <section id="recordsListView">
+    <button type="button" class="csv-export-all-btn" id="exportAllCsvBtn">
+      📊 匯出全部紀錄 CSV<span class="csv-count" id="csvCount"></span>
+    </button>
+    <button type="button" class="new-record-btn" id="newRecordBtn">＋ 新增一筆</button>
+
+    <div class="records-toolbar">
+      <select id="sortSelect">
+        <option value="updated_desc">更新時間：新→舊</option>
+        <option value="updated_asc">更新時間：舊→新</option>
+        <option value="plant_asc">電廠名稱：A→Z</option>
+      </select>
+      <input type="text" id="filterInput" placeholder="搜尋電廠名稱…" />
+    </div>
+
+    <div id="recordsList"></div>
+    <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
+
+    <footer class="page-footer">紀錄與簽名僅儲存在本機裝置，不會上傳至任何伺服器。<br />版本 <span id="appVersion"></span></footer>
+  </section>
+
+  <!-- ================= 表單編輯畫面 ================= -->
+  <section id="formEditorView" hidden>
+    <section class="section-card">
+      <h2><span class="num">1</span>基本資料</h2>
+      <div class="field">
+        <label class="field-label">電廠持有者</label>
+        <input type="text" id="f-holder" placeholder="請輸入電廠持有者名稱" />
+      </div>
+      <div class="field">
+        <label class="field-label">電廠名稱</label>
+        <div style="display:flex;gap:8px;">
+          <select id="f-plantGroup" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;">
+            <option value="">請選擇群組</option>
+          </select>
+          <select id="f-plantSite" style="flex:1.4;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;" disabled>
+            <option value="">請先選群組</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">2</span>障礙來源</h2>
+      <div class="hint" style="margin-bottom:10px;">可複選</div>
+      <div id="sourceWrap" class="checkbox-grid"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>損壞資訊</h2>
+      <div class="field">
+        <label class="field-label">現場工程師及連絡電話</label>
+        <input type="text" id="f-contact" placeholder="姓名 / 電話" />
+      </div>
+      <div class="field">
+        <label class="field-label">損壞時間</label>
+        <input type="datetime-local" id="f-damageTime" />
+      </div>
+      <div class="field">
+        <label class="field-label">項目</label>
+        <textarea id="f-item" placeholder="損壞的設備/項目"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">損失發電期間</label>
+        <textarea id="f-lossDuration"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">預估損失發電量</label>
+        <textarea id="f-lossAmount"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">說明</label>
+        <textarea id="f-description" placeholder="請描述損壞狀況…"></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>是否結案</h2>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px;">
+          <input type="radio" name="closed" value="是" id="f-closedYes" style="width:18px;height:18px;" /> 是
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;">
+          <input type="radio" name="closed" value="否" id="f-closedNo" style="width:18px;height:18px;" /> 否
+        </label>
+      </div>
+      <div class="field" id="closedYesFields" hidden>
+        <label class="field-label">結案時間</label>
+        <input type="datetime-local" id="f-closeTime" />
+        <label class="field-label" style="margin-top:10px;">決方式說明</label>
+        <textarea id="f-resolutionNote"></textarea>
+      </div>
+      <div class="field" id="closedNoFields" hidden>
+        <label class="field-label">建議解決方案之說明</label>
+        <textarea id="f-suggestedSolution"></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">5</span>簽核</h2>
+      <div class="field">
+        <label class="field-label">現場負責工程師</label>
+        <div id="sigEngineerWrap"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">維運主管</label>
+        <div id="sigSupervisorWrap"></div>
+      </div>
+    </section>
+
+    <div class="draft-status" id="draftStatus">尚未儲存</div>
+    <footer class="page-footer">草稿與簽名僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
+</main>
+
+<div class="action-bar" id="editorActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="saveDraftBtn">💾 儲存草稿</button>
+  <button type="button" class="btn btn-primary" id="exportPdfBtn">📄 匯出 PDF</button>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="modal-backdrop" id="missingFieldsModal" hidden>
+  <div class="modal-sheet">
+    <h3>還有欄位未完成</h3>
+    <p class="hint">請先完成以下項目才能匯出 PDF：</p>
+    <ul id="missingFieldsList" style="margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.9;color:#c0392b;"></ul>
+    <button type="button" class="small-btn" style="width:100%;text-align:center;" id="closeMissingModalBtn">我知道了</button>
+  </div>
+</div>
+
+<script src="../vendor/jspdf.umd.min.js"></script>
+<script src="../vendor/html2canvas.min.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/signature.js"></script>
+<script src="../js/pdf-export.js"></script>
+<script src="../js/csv-export.js"></script>
+<script src="../js/share.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/forms/report3-check-template.js"></script>
+<script src="../js/forms/report3-check.js"></script>
+<script>
+  fetch('../service-worker.js').then((r) => r.text()).then((t) => {
+    const m = t.match(/CACHE_VERSION\s*=\s*'([^']+)'/);
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = m ? m[1] : '未知';
+  }).catch(() => {});
+</script>
+</body>
+</html>
