@@ -41,6 +41,16 @@
     toast: document.getElementById('toast'),
   };
 
+  // 電廠持有者：目前先做成下拉選單方便統一填寫，之後有新客戶再加進這個陣列即可
+  const HOLDER_OPTIONS = ['旭忠能源股份有限公司'];
+  HOLDER_OPTIONS.forEach((name) => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    els.holder.appendChild(opt);
+  });
+  els.holder.addEventListener('change', scheduleAutosave);
+
   const PLANT_LOCATIONS = {
     甲群組: ['670館', '321館', '211三樓', '211廠房'],
     乙群組: ['681館', '210館', '331館', '682館(上)', '682館(下)', '701館', '218館', '401館', '405館', '中一變電站'],
