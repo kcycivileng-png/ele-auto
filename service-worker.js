@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.13.0';
+const CACHE_VERSION = 'v1.15.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -10,11 +10,13 @@ const CORE_ASSETS = [
   './css/style.css',
   './js/app.js',
   './js/db.js',
+  './js/bulk-select.js',
   './js/photo.js',
   './js/signature.js',
   './js/pdf-export.js',
   './js/csv-export.js',
   './js/share.js',
+  './js/drive-upload.js',
   './js/form-kit.js',
   './forms/solar-module-check.html',
   './js/forms/solar-module-check.js',

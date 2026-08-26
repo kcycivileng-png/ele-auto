@@ -644,6 +644,34 @@ main {
   font-size: 15px;
 }
 
+/* 紀錄列表：多選模式（一鍵匯出/一鍵刪除） */
+.select-mode-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-600);
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.select-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--ink-400);
+}
+.select-toolbar .small-btn { flex-shrink: 0; }
+.select-toolbar .select-count { flex: 1; text-align: right; }
+.record-card .rc-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
 .empty-state {
   text-align: center;
   color: var(--ink-400);

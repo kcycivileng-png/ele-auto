@@ -38,6 +38,13 @@
       <input type="text" id="filterInput" placeholder="搜尋電廠名稱…" />
     </div>
 
+    <button type="button" class="select-mode-btn" id="selectModeBtn">☑ 選取多筆（一鍵匯出／刪除）</button>
+    <div class="select-toolbar" id="selectToolbar" hidden>
+      <button type="button" class="small-btn" id="selectAllRecordsBtn">全選</button>
+      <button type="button" class="small-btn" id="selectNoneRecordsBtn">取消全選</button>
+      <span class="select-count" id="selectCount">已選 0 筆</span>
+    </div>
+
     <div id="recordsList"></div>
     <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
 
@@ -145,12 +152,19 @@
 
 <div class="action-bar" id="editorActionBar" hidden>
   <button type="button" class="btn btn-secondary" id="saveDraftBtn">💾 儲存草稿</button>
-  <button type="button" class="btn btn-primary" id="exportPdfBtn">📄 匯出 PDF</button>
+  <button type="button" class="btn btn-primary" id="exportPdfBtn">⬇️ 下載 PDF</button>
+  <button type="button" class="btn btn-secondary" id="uploadCloudBtn">☁️ 上傳雲端</button>
 </div>
 
 <div class="action-bar" id="batchActionBar" hidden>
   <button type="button" class="btn btn-secondary" id="batchCancelBtn">取消</button>
   <button type="button" class="btn btn-primary" id="batchSubmitBtn">✅ 建立並匯出PDF</button>
+</div>
+
+<div class="action-bar" id="bulkActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="bulkDeleteBtn">🗑 刪除選取</button>
+  <button type="button" class="btn btn-primary" id="bulkExportBtn">📄 匯出選取PDF</button>
+  <button type="button" class="btn" id="exitSelectModeBtn" style="flex:0 0 100%;background:none;color:var(--ink-400);font-weight:400;padding:4px;">取消選取</button>
 </div>
 
 <div class="toast" id="toast" hidden></div>
@@ -167,6 +181,8 @@
 <script src="../vendor/jspdf.umd.min.js"></script>
 <script src="../vendor/html2canvas.min.js"></script>
 <script src="../js/db.js"></script>
+<script src="../js/bulk-select.js"></script>
+<script src="../js/drive-upload.js"></script>
 <script src="../js/signature.js"></script>
 <script src="../js/pdf-export.js"></script>
 <script src="../js/csv-export.js"></script>
