@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.17.0';
+const CACHE_VERSION = 'v1.18.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -78,7 +78,13 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) =>
+      // 逐一用 {cache:'reload'} 強制略過瀏覽器/CDN的HTTP快取直接跟伺服器要最新bytes，
+      // 不能用cache.addAll(CORE_ASSETS)——那個底層還是普通fetch，遇到GitHub Pages/CDN
+      // 對某些檔案的HTTP快取還沒過期時，可能會把「同一個部署版本」裡幾個檔案的新舊
+      // 混在一起存進同一份新版cache（例如HTML已更新、JS卻還是舊的），程式邏輯就會對不起來。
+      Promise.all(CORE_ASSETS.map((url) => fetch(url, { cache: 'reload' }).then((res) => cache.put(url, res))))
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -95,18 +101,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // 改成「網路優先，失敗才用快取」：這個App還在密集修改測試階段，使用者需要
+  // 每次都拿到最新版本；只有離線抓不到網路時才退回本機快取，維持基本可離線使用。
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          if (response && response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
