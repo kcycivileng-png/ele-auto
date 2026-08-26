@@ -19,4 +19,17 @@
   if (banner && !isStandalone) {
     banner.hidden = false;
   }
+
+  // 分享清單有時候不會列出LINE（LINE自己沒有跟系統登記可以接收PDF檔案，
+  // 這是LINE/作業系統那邊的限制，網頁端無法強迫它出現）。在匯出按鈕旁邊加一行
+  // 提示，教使用者遇到這種情況時的替代做法。集中寫在這裡，每個表單頁面都會自動套用，
+  // 不用每個表單各自加一次。
+  const exportBtn = document.getElementById('exportPdfBtn');
+  const actionBar = exportBtn && exportBtn.closest('.action-bar');
+  if (actionBar && !actionBar.querySelector('.share-hint')) {
+    const hint = document.createElement('div');
+    hint.className = 'share-hint';
+    hint.textContent = '分享清單沒有LINE？請選「儲存到檔案」，再從LINE聊天室選檔案傳送';
+    actionBar.appendChild(hint);
+  }
 })();
