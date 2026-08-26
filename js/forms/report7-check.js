@@ -57,6 +57,16 @@
     batchStatus: document.getElementById('batchStatus'),
     batchCancelBtn: document.getElementById('batchCancelBtn'),
     batchSubmitBtn: document.getElementById('batchSubmitBtn'),
+
+    selectModeBtn: document.getElementById('selectModeBtn'),
+    selectToolbar: document.getElementById('selectToolbar'),
+    selectAllRecordsBtn: document.getElementById('selectAllRecordsBtn'),
+    selectNoneRecordsBtn: document.getElementById('selectNoneRecordsBtn'),
+    selectCount: document.getElementById('selectCount'),
+    bulkActionBar: document.getElementById('bulkActionBar'),
+    bulkDeleteBtn: document.getElementById('bulkDeleteBtn'),
+    bulkExportBtn: document.getElementById('bulkExportBtn'),
+    exitSelectModeBtn: document.getElementById('exitSelectModeBtn'),
   };
 
   const PLANT_LOCATIONS = {
@@ -137,8 +147,8 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…" maxlength="50"></textarea>
-          <div class="char-count">0/50</div>
+          <textarea placeholder="異常狀況處理&備註…" maxlength="28"></textarea>
+          <div class="char-count">0/28</div>
         </div>
       `;
       itemsWrap.appendChild(el);
@@ -151,8 +161,8 @@
       }
       function updateCharCount() {
         const n = noteInput.value.length;
-        charCount.textContent = `${n}/50`;
-        charCount.classList.toggle('near-limit', n >= 45);
+        charCount.textContent = `${n}/28`;
+        charCount.classList.toggle('near-limit', n >= 24);
       }
       btns.forEach((b) => {
         b.addEventListener('click', () => {
@@ -183,6 +193,59 @@
 
   document.querySelectorAll('#formEditorView input[type=text], #formEditorView input[type=date]').forEach((el) => {
     el.addEventListener('input', scheduleAutosave);
+  });
+
+  // ======================================================================
+  // 紀錄列表「多選模式」：一鍵匯出（合併成一份多頁PDF）／一鍵刪除
+  // ======================================================================
+  const bulkSelect = KtBulkSelect.attach({
+    selectModeBtn: els.selectModeBtn,
+    selectToolbar: els.selectToolbar,
+    selectAllBtn: els.selectAllRecordsBtn,
+    selectNoneBtn: els.selectNoneRecordsBtn,
+    selectCountEl: els.selectCount,
+    bulkActionBar: els.bulkActionBar,
+    exitBtn: els.exitSelectModeBtn,
+    getAllIds: () => currentListedIds,
+    onRenderNeeded: () => renderRecordsList(),
+  });
+
+  els.bulkDeleteBtn.addEventListener('click', async () => {
+    const ids = bulkSelect.getSelectedIds();
+    if (!ids.length) { showToast('尚未選取任何紀錄'); return; }
+    if (!confirm(`確定要刪除選取的 ${ids.length} 筆紀錄嗎？此動作無法復原。`)) return;
+    for (const id of ids) await KtDB.deleteRecord(id);
+    showToast(`已刪除 ${ids.length} 筆紀錄`);
+    bulkSelect.exit();
+  });
+
+  els.bulkExportBtn.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const ids = bulkSelect.getSelectedIds();
+    if (!ids.length) { showToast('尚未選取任何紀錄'); return; }
+    btn.textContent = '產生中…';
+    btn.disabled = true;
+    try {
+      const bg = await loadBackground();
+      const pages = [];
+      for (const id of ids) {
+        const rec = await KtDB.loadRecord(id);
+        if (!rec) continue;
+        pages.push(Report7CheckTemplate.buildPage1(rec.data, bg));
+        await KtDB.saveRecord(id, FORM_ID, rec.data, { markExported: true });
+      }
+      const blob = await KtPdf.renderTemplatedPdf(pages);
+      const today = fmtTs(Date.now()).slice(0, 10);
+      await KtShare.shareOrSavePdf(blob, `${FORM_TITLE}_選取${ids.length}筆_${today}.pdf`);
+      showToast(`已匯出 ${ids.length} 筆紀錄的PDF`);
+      bulkSelect.exit();
+    } catch (err) {
+      console.error(err);
+      showToast('PDF 產生失敗，請重試');
+    } finally {
+      btn.textContent = '📄 匯出選取PDF';
+      btn.disabled = false;
+    }
   });
 
   // ======================================================================
@@ -250,7 +313,10 @@
     window.scrollTo(0, 0);
   }
 
-  els.batchNewBtn.addEventListener('click', showBatchView);
+  els.batchNewBtn.addEventListener('click', () => {
+    if (bulkSelect.isActive()) bulkSelect.exit();
+    showBatchView();
+  });
   els.batchCancelBtn.addEventListener('click', () => showListView());
 
   function validateBatchForExport(selectedPlants) {
@@ -367,6 +433,7 @@
   });
 
   els.newRecordBtn.addEventListener('click', () => {
+    if (bulkSelect.isActive()) bulkSelect.exit();
     showEditorView(KtDB.newRecordId(FORM_ID), true);
   });
 
@@ -396,10 +463,13 @@
     return records.filter((rec) => (rec.data?.plantName || '').toLowerCase().includes(kw));
   }
 
+  let currentListedIds = [];
+
   async function renderRecordsList() {
     const allRecords = await KtDB.listRecords(FORM_ID);
     const filtered = filterRecords(allRecords, els.filterInput.value);
     const records = sortRecords(filtered, els.sortSelect.value);
+    currentListedIds = records.map((r) => r.id);
     els.recordsList.innerHTML = '';
     els.emptyState.hidden = allRecords.length > 0;
     els.exportAllCsvBtn.disabled = allRecords.length === 0;
@@ -418,28 +488,40 @@
       const quake = rec.data?.quakeLevel || '未填地震震度';
       const statusCls = rec.exportedAt ? 'exported' : 'draft';
       const statusLabel = rec.exportedAt ? '已匯出' : '草稿中';
+      const selectMode = bulkSelect.isActive();
       card.innerHTML = `
+        ${selectMode ? `<input type="checkbox" class="rc-check" ${bulkSelect.isSelected(rec.id) ? 'checked' : ''} />` : ''}
         <div class="rc-main">
           <div class="rc-title">${escapeHtml(plant)}</div>
           <div class="rc-meta">${escapeHtml(quake)} · 更新於 ${fmtTs(rec.updatedAt)}</div>
         </div>
         <div class="rc-status ${statusCls}">${statusLabel}</div>
-        <button type="button" class="rc-copy" aria-label="複製">📄</button>
-        <button type="button" class="rc-del" aria-label="刪除">🗑</button>
+        ${selectMode ? '' : '<button type="button" class="rc-copy" aria-label="複製">📄</button><button type="button" class="rc-del" aria-label="刪除">🗑</button>'}
       `;
-      card.querySelector('.rc-main').addEventListener('click', () => showEditorView(rec.id, false));
-      card.querySelector('.rc-status').addEventListener('click', () => showEditorView(rec.id, false));
-      card.querySelector('.rc-copy').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await duplicateRecord(rec);
-      });
-      card.querySelector('.rc-del').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (confirm(`確定要刪除「${plant}」這筆紀錄嗎？此動作無法復原。`)) {
-          await KtDB.deleteRecord(rec.id);
-          renderRecordsList();
-        }
-      });
+      if (selectMode) {
+        const check = card.querySelector('.rc-check');
+        const toggle = () => {
+          check.checked = !check.checked;
+          bulkSelect.toggle(rec.id, check.checked);
+        };
+        check.addEventListener('click', (e) => { e.stopPropagation(); bulkSelect.toggle(rec.id, check.checked); });
+        card.querySelector('.rc-main').addEventListener('click', toggle);
+        card.querySelector('.rc-status').addEventListener('click', toggle);
+      } else {
+        card.querySelector('.rc-main').addEventListener('click', () => showEditorView(rec.id, false));
+        card.querySelector('.rc-status').addEventListener('click', () => showEditorView(rec.id, false));
+        card.querySelector('.rc-copy').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await duplicateRecord(rec);
+        });
+        card.querySelector('.rc-del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (confirm(`確定要刪除「${plant}」這筆紀錄嗎？此動作無法復原。`)) {
+            await KtDB.deleteRecord(rec.id);
+            renderRecordsList();
+          }
+        });
+      }
       els.recordsList.appendChild(card);
     });
   }

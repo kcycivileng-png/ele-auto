@@ -152,8 +152,8 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…" maxlength="50"></textarea>
-          <div class="char-count">0/50</div>
+          <textarea placeholder="異常狀況處理&備註…" maxlength="28"></textarea>
+          <div class="char-count">0/28</div>
         </div>
       `;
       itemsWrap.appendChild(el);
@@ -166,8 +166,8 @@
       }
       function updateCharCount() {
         const n = noteInput.value.length;
-        charCount.textContent = `${n}/50`;
-        charCount.classList.toggle('near-limit', n >= 45);
+        charCount.textContent = `${n}/28`;
+        charCount.classList.toggle('near-limit', n >= 24);
       }
       btns.forEach((b) => {
         b.addEventListener('click', () => {
@@ -672,12 +672,12 @@
       const { blob, filename } = await buildCurrentPdfBlob();
       await KtShare.shareOrSavePdf(blob, filename);
       await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
-      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 下載 PDF`;
+      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 匯出 PDF`;
     } catch (err) {
       console.error(err);
       showToast('PDF 產生失敗，請重試');
     } finally {
-      btn.textContent = '⬇️ 下載 PDF';
+      btn.textContent = '📄 匯出 PDF';
       btn.disabled = false;
     }
   });

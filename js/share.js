@@ -1,20 +1,12 @@
-// 儲存檔案（PDF 或 CSV）。
-// PDF：直接下載到裝置（不再嘗試手機分享選單——部分手機的分享選單不會列出LINE，
-// 改用「下載」+「上傳雲端」兩個明確的按鈕取代，行為較一致好教學）。
-// CSV：維持原本「優先分享、退回下載」的行為。
+// 分享 / 儲存檔案（PDF 或 CSV）：優先使用手機原生分享選單（可分享到 LINE 等 App），
+// 若裝置不支援檔案分享，退回「下載檔案」。
+//
+// 為什麼PDF不能直接固定用「下載」：iOS Safari 對 blob網址的<a download>支援很差，
+// 常常點了完全沒反應、也不會真的存進「檔案」App（桌機Chrome/Android則正常）。
+// 曾經試過把PDF改成固定用下載（為了解決「分享選單沒有LINE」的抱怨），結果變成iOS
+// 完全存不到檔案，屬於更嚴重的迴歸，所以改回「優先分享、退回下載」這個原本就驗證過
+// 在iOS上能正常運作的方式。
 const KtShare = (() => {
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    return { method: 'download' };
-  }
-
   async function shareOrSaveFile(blob, filename, mimeType) {
     const file = new File([blob], filename, { type: mimeType });
 
@@ -30,11 +22,19 @@ const KtShare = (() => {
       }
     }
 
-    return downloadBlob(blob, filename);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return { method: 'download' };
   }
 
   function shareOrSavePdf(blob, filename) {
-    return downloadBlob(blob, filename);
+    return shareOrSaveFile(blob, filename, 'application/pdf');
   }
 
   function shareOrSaveCsv(blob, filename) {

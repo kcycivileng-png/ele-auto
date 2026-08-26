@@ -20,14 +20,16 @@
     banner.hidden = false;
   }
 
-  // 匯出按鈕旁加一行提示：PDF會直接下載，若要分享請自行從手機下載/檔案APP選檔案傳送，
-  // 或用「上傳雲端」直接存進公司雲端資料夾。集中寫在這裡，每個表單頁面自動套用。
+  // 分享清單有時候不會列出LINE（LINE自己沒有跟系統登記可以接收PDF檔案，
+  // 這是LINE/作業系統那邊的限制，網頁端無法強迫它出現）。在匯出按鈕旁邊加一行
+  // 提示，教使用者遇到這種情況時的替代做法。集中寫在這裡，每個表單頁面都會自動套用，
+  // 不用每個表單各自加一次。
   const exportBtn = document.getElementById('exportPdfBtn');
   const actionBar = exportBtn && exportBtn.closest('.action-bar');
   if (actionBar && !actionBar.querySelector('.share-hint')) {
     const hint = document.createElement('div');
     hint.className = 'share-hint';
-    hint.textContent = 'PDF會直接下載。要傳LINE請至手機下載/檔案APP選檔案傳送；要存公司雲端請按「上傳雲端」';
+    hint.textContent = '分享清單沒有LINE？請選「儲存到檔案」，再從LINE聊天室選檔案傳送';
     actionBar.appendChild(hint);
   }
 })();
