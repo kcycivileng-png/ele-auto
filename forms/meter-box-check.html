@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0f6e4f" />
-<title>案廠設備經歷/維護紀錄卡</title>
+<title>售電表箱檢查表</title>
 <link rel="manifest" href="../manifest.json" />
 <link rel="icon" href="../icons/icon-192.png" />
 <link rel="apple-touch-icon" href="../icons/icon-192.png" />
@@ -15,8 +15,8 @@
 <header class="app-header">
   <button type="button" class="back-btn" id="headerBackBtn">‹</button>
   <div>
-    <h1>案廠設備經歷/維護紀錄卡</h1>
-    <div class="subtitle" id="headerSubtitle">附表四・每次維護填寫</div>
+    <h1>售電表箱檢查表</h1>
+    <div class="subtitle" id="headerSubtitle">附表一・維運報告 子檢查表</div>
   </div>
 </header>
 
@@ -32,9 +32,11 @@
       <select id="sortSelect">
         <option value="updated_desc">更新時間：新→舊</option>
         <option value="updated_asc">更新時間：舊→新</option>
+        <option value="date_desc">檢查日期：新→舊</option>
+        <option value="date_asc">檢查日期：舊→新</option>
         <option value="plant_asc">電廠名稱：A→Z</option>
       </select>
-      <input type="text" id="filterInput" placeholder="搜尋電廠名稱…" />
+      <input type="text" id="filterInput" placeholder="搜尋電廠名稱或檢查人員…" />
     </div>
 
     <button type="button" class="select-mode-btn" id="selectModeBtn">☑ 選取多筆（一鍵匯出／刪除）</button>
@@ -47,7 +49,7 @@
     <div id="recordsList"></div>
     <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
 
-    <footer class="page-footer">紀錄僅儲存在本機裝置，不會上傳至任何伺服器。<br />版本 <span id="appVersion"></span></footer>
+    <footer class="page-footer">紀錄與照片僅儲存在本機裝置，不會上傳至任何伺服器。<br />版本 <span id="appVersion"></span></footer>
   </section>
 
   <!-- ================= 表單編輯畫面 ================= -->
@@ -66,29 +68,41 @@
         </div>
       </div>
       <div class="field">
-        <label class="field-label">電廠持有者</label>
-        <select id="f-holder" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;">
-          <option value="">請選擇電廠持有者</option>
-        </select>
+        <label class="field-label">檢查日期</label>
+        <input type="date" id="f-checkDate" />
       </div>
       <div class="field">
-        <label class="field-label">裝置容量 (kW)</label>
-        <input type="text" id="f-capacity" inputmode="decimal" />
-      </div>
-      <div class="field">
-        <label class="field-label">設置地址</label>
-        <input type="text" id="f-address" />
+        <label class="field-label">檢查人員</label>
+        <input type="text" id="f-inspector" placeholder="請輸入檢查人員姓名" />
       </div>
     </section>
 
     <section class="section-card">
-      <h2><span class="num">2</span>設備經歷/維護紀錄</h2>
-      <div class="hint" style="margin-bottom:10px;">表格固定28列，比照原始表單格式；若不夠用，請另建一筆新紀錄接續填寫。</div>
-      <div id="logTableWrap"></div>
+      <h2><span class="num">2</span>售電表箱檢查項目（每季）</h2>
+      <div id="checklistWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>相片</h2>
+      <div class="hint" style="margin-bottom:10px;">躉售表箱拍照時，手板上需寫「109之讀值×倍數」；電錶讀值照片則不需要手板。</div>
+      <div id="photoWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>檢修說明</h2>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;">
+          <input type="checkbox" id="f-noIssue" style="width:18px;height:18px;" /> 無異常
+        </label>
+      </div>
+      <div class="field" id="repairNoteField">
+        <label class="field-label">說明內容</label>
+        <textarea id="f-repairNote" placeholder="例：檢查項目9.2-讀值XXX(x000)"></textarea>
+      </div>
     </section>
 
     <div class="draft-status" id="draftStatus">尚未儲存</div>
-    <footer class="page-footer">草稿僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+    <footer class="page-footer">草稿與照片僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
   </section>
 </main>
 
@@ -120,13 +134,14 @@
 <script src="../js/db.js"></script>
 <script src="../js/bulk-select.js"></script>
 <script src="../js/drive-upload.js"></script>
+<script src="../js/photo.js"></script>
 <script src="../js/form-kit.js"></script>
 <script src="../js/pdf-export.js"></script>
 <script src="../js/csv-export.js"></script>
 <script src="../js/share.js"></script>
 <script src="../js/app.js"></script>
-<script src="../js/forms/report4-check-template.js"></script>
-<script src="../js/forms/report4-check.js"></script>
+<script src="../js/forms/meter-box-check-template.js"></script>
+<script src="../js/forms/meter-box-check.js"></script>
 <script>
   fetch('../service-worker.js').then((r) => r.text()).then((t) => {
     const m = t.match(/CACHE_VERSION\s*=\s*'([^']+)'/);

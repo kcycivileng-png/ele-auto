@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.22.0';
+const CACHE_VERSION = 'v1.24.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -45,6 +45,36 @@ const CORE_ASSETS = [
   './pdf-templates/inverter-check-p1.png',
   './pdf-templates/inverter-check-p2-photos.png',
   './pdf-templates/inverter-check-p3-grounding.png',
+  './forms/monitor-box-check.html',
+  './js/forms/monitor-box-check.js',
+  './js/forms/monitor-box-check-template.js',
+  './pdf-templates/monitor-box-check-p1.png',
+  './pdf-templates/monitor-box-check-p2-photos.png',
+  './forms/conduit-check.html',
+  './js/forms/conduit-check.js',
+  './js/forms/conduit-check-template.js',
+  './pdf-templates/conduit-check-p1.png',
+  './forms/cleaning-check.html',
+  './js/forms/cleaning-check.js',
+  './js/forms/cleaning-check-template.js',
+  './pdf-templates/cleaning-check-p1.png',
+  './forms/hv-equipment-check.html',
+  './js/forms/hv-equipment-check.js',
+  './js/forms/hv-equipment-check-template.js',
+  './pdf-templates/hv-equipment-check-p1.png',
+  './pdf-templates/hv-equipment-check-p2-photos.png',
+  './forms/meter-box-check.html',
+  './js/forms/meter-box-check.js',
+  './js/forms/meter-box-check-template.js',
+  './pdf-templates/meter-box-check-p1.png',
+  './forms/environment-check.html',
+  './js/forms/environment-check.js',
+  './js/forms/environment-check-template.js',
+  './pdf-templates/environment-check-p1.png',
+  './forms/structure-check.html',
+  './js/forms/structure-check.js',
+  './js/forms/structure-check-template.js',
+  './pdf-templates/structure-check-p1.png',
   './forms/report2-check.html',
   './js/forms/report2-check.js',
   './js/forms/report2-check-template.js',

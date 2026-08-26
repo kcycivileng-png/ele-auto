@@ -1,6 +1,7 @@
 (function () {
   const FORM_ID = 'acbox-check';
   const FORM_TITLE = '交流箱檢查表';
+  const FILE_PREFIX = '1-';
   const PHASE_ROWS = 6; // 一次側/二次側各固定6列（R-S/S-T/R-T/R-G/S-G/T-G）
   const GROUND_ROWS = 6; // 比照原始Word表格，固定6列
 
@@ -239,7 +240,7 @@
       }
       const blob = await KtPdf.renderTemplatedPdf(pages);
       const today = fmtTs(Date.now()).slice(0, 10);
-      await KtShare.shareOrSavePdf(blob, `${FORM_TITLE}_選取${ids.length}筆_${today}.pdf`);
+      await KtShare.shareOrSavePdf(blob, `${FILE_PREFIX}${FORM_TITLE}_選取${ids.length}筆_${today}.pdf`);
       showToast(`已匯出 ${ids.length} 筆紀錄的PDF`);
       bulkSelect.exit();
     } catch (err) {
@@ -546,7 +547,7 @@
 
   function buildFilename(data, ext) {
     const safe = (s) => (s || '').replace(/[\\/:*?"<>|]/g, '').trim();
-    const parts = [FORM_TITLE, safe(data.meta.plantName), safe(data.meta.checkDate)].filter(Boolean);
+    const parts = [FILE_PREFIX + FORM_TITLE, safe(data.meta.plantName), safe(data.meta.checkDate)].filter(Boolean);
     return parts.join('_') + '.' + ext;
   }
 
@@ -578,6 +579,21 @@
     return bgCachePromise;
   }
 
+  async function buildCurrentPdfBlob() {
+    await doSave(false);
+    const data = gatherFormData();
+    const bg = await loadBackgrounds();
+    const T = AcboxCheckTemplate;
+    const pages = [
+      T.buildPage1(data, bg.p1),
+      T.buildPageThermal(data, bg.p2),
+      T.buildPageInsulation(data, bg.p3),
+      T.buildPageGrounding(data, bg.p4),
+    ];
+    const blob = await KtPdf.renderTemplatedPdf(pages);
+    return { blob, filename: buildFilename(data, 'pdf') };
+  }
+
   document.getElementById('exportPdfBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     if (!currentRecordId) return;
@@ -589,25 +605,42 @@
     btn.textContent = '產生中…';
     btn.disabled = true;
     try {
-      await doSave(false);
-      const data = gatherFormData();
-      const bg = await loadBackgrounds();
-      const T = AcboxCheckTemplate;
-      const pages = [
-        T.buildPage1(data, bg.p1),
-        T.buildPageThermal(data, bg.p2),
-        T.buildPageInsulation(data, bg.p3),
-        T.buildPageGrounding(data, bg.p4),
-      ];
-      const blob = await KtPdf.renderTemplatedPdf(pages);
-      await KtShare.shareOrSavePdf(blob, buildFilename(data, 'pdf'));
-      await KtDB.saveRecord(currentRecordId, FORM_ID, data, { markExported: true });
+      const { blob, filename } = await buildCurrentPdfBlob();
+      await KtShare.shareOrSavePdf(blob, filename);
+      await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
       els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 匯出 PDF`;
     } catch (err) {
       console.error(err);
       showToast('PDF 產生失敗，請重試');
     } finally {
       btn.textContent = '📄 匯出 PDF';
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('uploadCloudBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (!currentRecordId) return;
+    const missing = validateForExport();
+    if (missing.length) {
+      showMissingFieldsModal(missing);
+      return;
+    }
+    btn.textContent = '登入中…';
+    btn.disabled = true;
+    try {
+      const accessToken = await KtDriveUpload.getAccessToken();
+      btn.textContent = '上傳中…';
+      const { blob, filename } = await buildCurrentPdfBlob();
+      await KtDriveUpload.uploadPdf(blob, filename, accessToken);
+      await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
+      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 上傳雲端`;
+      showToast('已上傳到雲端資料夾');
+    } catch (err) {
+      console.error(err);
+      showToast(err && err.message ? err.message : '上傳失敗，請重試');
+    } finally {
+      btn.textContent = '☁️ 上傳雲端';
       btn.disabled = false;
     }
   });
@@ -673,7 +706,7 @@
     const rows = records.map(recordToCsvRow);
     const blob = KtCsv.buildCsvBlob(CSV_HEADERS, rows);
     const today = fmtTs(Date.now()).slice(0, 10).replace(/-/g, '');
-    await KtShare.shareOrSaveCsv(blob, `${FORM_TITLE}_全部紀錄_${today}.csv`);
+    await KtShare.shareOrSaveCsv(blob, `${FILE_PREFIX}${FORM_TITLE}_全部紀錄_${today}.csv`);
   });
 
   function fmtTs(ts) {

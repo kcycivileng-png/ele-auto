@@ -1,6 +1,7 @@
 (function () {
   const FORM_ID = 'report5-check';
   const FORM_TITLE = '太陽光電電廠設備防颱檢查表';
+  const FILE_PREFIX = '5-';
 
   // 原始表單只有「正常/異常」兩態（沒有調整/更換），且「異常狀況處理&備註」欄一律顯示。
   const ITEMS = [
@@ -241,7 +242,7 @@
       }
       const blob = await KtPdf.renderTemplatedPdf(pages);
       const today = fmtTs(Date.now()).slice(0, 10);
-      await KtShare.shareOrSavePdf(blob, `${FORM_TITLE}_選取${ids.length}筆_${today}.pdf`);
+      await KtShare.shareOrSavePdf(blob, `${FILE_PREFIX}${FORM_TITLE}_選取${ids.length}筆_${today}.pdf`);
       showToast(`已匯出 ${ids.length} 筆紀錄的PDF`);
       bulkSelect.exit();
     } catch (err) {
@@ -340,7 +341,7 @@
   function buildBatchFilename(typhoonName, count) {
     const safe = (s) => (s || '').replace(/[\\/:*?"<>|]/g, '').trim();
     const today = fmtTs(Date.now()).slice(0, 10);
-    return `${FORM_TITLE}_批次${count}廠_${safe(typhoonName)}_${today}.pdf`;
+    return `${FILE_PREFIX}${FORM_TITLE}_批次${count}廠_${safe(typhoonName)}_${today}.pdf`;
   }
 
   els.batchSubmitBtn.addEventListener('click', async (e) => {
@@ -629,7 +630,7 @@
 
   function buildFilename(data, ext) {
     const safe = (s) => (s || '').replace(/[\\/:*?"<>|]/g, '').trim();
-    const parts = [FORM_TITLE, safe(data.plantName), safe(data.typhoonName)].filter(Boolean);
+    const parts = [FILE_PREFIX + FORM_TITLE, safe(data.plantName), safe(data.typhoonName)].filter(Boolean);
     return parts.join('_') + '.' + ext;
   }
 
@@ -736,7 +737,7 @@
     const rows = records.map(recordToCsvRow);
     const blob = KtCsv.buildCsvBlob(CSV_HEADERS, rows);
     const today = fmtTs(Date.now()).slice(0, 10).replace(/-/g, '');
-    await KtShare.shareOrSaveCsv(blob, `${FORM_TITLE}_全部紀錄_${today}.csv`);
+    await KtShare.shareOrSaveCsv(blob, `${FILE_PREFIX}${FORM_TITLE}_全部紀錄_${today}.csv`);
   });
 
   function fmtTs(ts) {
