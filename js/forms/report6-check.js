@@ -596,11 +596,16 @@
       showMissingFieldsModal(missing);
       return;
     }
-    btn.textContent = '上傳中…';
+    btn.textContent = '登入中…';
     btn.disabled = true;
     try {
+      // 先在點擊當下立刻要求Google登入授權（還在使用者手勢的時間窗內），
+      // 瀏覽器才不會把稍後才彈出的登入視窗當成廣告彈窗擋掉；
+      // PDF畫面渲染比較耗時，等授權拿到之後再做。
+      const accessToken = await KtDriveUpload.getAccessToken();
+      btn.textContent = '上傳中…';
       const { blob, filename } = await buildCurrentPdfBlob();
-      await KtDriveUpload.uploadPdf(blob, filename);
+      await KtDriveUpload.uploadPdf(blob, filename, accessToken);
       await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
       els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 上傳雲端`;
       showToast('已上傳到雲端資料夾');

@@ -53,8 +53,8 @@ const KtDriveUpload = (() => {
     }));
   }
 
-  async function uploadPdf(blob, filename) {
-    const accessToken = await getAccessToken();
+  async function uploadPdf(blob, filename, accessToken) {
+    if (!accessToken) accessToken = await getAccessToken();
     const metadata = { name: filename, parents: [FOLDER_ID], mimeType: 'application/pdf' };
     const form = new FormData();
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -71,5 +71,5 @@ const KtDriveUpload = (() => {
     return res.json();
   }
 
-  return { uploadPdf };
+  return { uploadPdf, getAccessToken };
 })();
