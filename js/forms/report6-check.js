@@ -151,8 +151,8 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…" maxlength="28"></textarea>
-          <div class="char-count">0/28</div>
+          <textarea placeholder="異常狀況處理&備註…" maxlength="32"></textarea>
+          <div class="char-count">0/32</div>
         </div>
       `;
       itemsWrap.appendChild(el);
@@ -165,8 +165,8 @@
       }
       function updateCharCount() {
         const n = noteInput.value.length;
-        charCount.textContent = `${n}/28`;
-        charCount.classList.toggle('near-limit', n >= 24);
+        charCount.textContent = `${n}/32`;
+        charCount.classList.toggle('near-limit', n >= 28);
       }
       btns.forEach((b) => {
         b.addEventListener('click', () => {
