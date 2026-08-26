@@ -27,6 +27,7 @@
       📊 匯出全部紀錄 CSV<span class="csv-count" id="csvCount"></span>
     </button>
     <button type="button" class="new-record-btn" id="newRecordBtn">＋ 新增一筆</button>
+    <button type="button" class="new-record-btn" id="batchNewBtn" style="background:var(--green-100);color:var(--green-900);margin-top:8px;">🌍 批次新增（多電廠地震後檢查）</button>
 
     <div class="records-toolbar">
       <select id="sortSelect">
@@ -85,11 +86,63 @@
     <div class="draft-status" id="draftStatus">尚未儲存</div>
     <footer class="page-footer">草稿與簽名僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
   </section>
+
+  <!-- ================= 批次新增畫面（多電廠共用答案） ================= -->
+  <section id="batchCreateView" hidden>
+    <div class="hint" style="margin-bottom:10px;">
+      先勾選要一起處理的電廠，填一次共用答案，送出後會替每個電廠各自建立一筆獨立紀錄（之後仍可個別修改），並直接產生一份包含所有電廠、每廠各一頁的PDF。
+    </div>
+    <section class="section-card">
+      <h2><span class="num">1</span>選擇電廠</h2>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button type="button" class="small-btn" id="batchSelectAllBtn">全選</button>
+        <button type="button" class="small-btn" id="batchClearAllBtn">取消全選</button>
+        <span class="hint" id="batchSelectedCount" style="align-self:center;"></span>
+      </div>
+      <div id="batchPlantWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">2</span>共用基本資料</h2>
+      <div class="field">
+        <label class="field-label">地震震度</label>
+        <input type="text" id="bf-quakeLevel" placeholder="例：5級" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢人員</label>
+        <input type="text" id="bf-inspector" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢日期</label>
+        <input type="date" id="bf-inspectDate" />
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>共用檢查項目</h2>
+      <div class="hint" style="margin-bottom:10px;">每個電廠一開始都會套用這裡填的答案，之後可以到各電廠自己的紀錄裡個別調整。</div>
+      <div id="batchItemsWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>巡檢人員簽名</h2>
+      <div class="hint" style="margin-bottom:10px;">同一份簽名會套用到本次批次建立的每個電廠。</div>
+      <div id="batchSigWrap"></div>
+    </section>
+
+    <div class="draft-status" id="batchStatus"></div>
+    <footer class="page-footer">草稿與簽名僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
 </main>
 
 <div class="action-bar" id="editorActionBar" hidden>
   <button type="button" class="btn btn-secondary" id="saveDraftBtn">💾 儲存草稿</button>
   <button type="button" class="btn btn-primary" id="exportPdfBtn">📄 匯出 PDF</button>
+</div>
+
+<div class="action-bar" id="batchActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="batchCancelBtn">取消</button>
+  <button type="button" class="btn btn-primary" id="batchSubmitBtn">✅ 建立並匯出PDF</button>
 </div>
 
 <div class="toast" id="toast" hidden></div>

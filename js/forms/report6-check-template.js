@@ -16,7 +16,8 @@ const Report6CheckTemplate = (() => {
   const checkboxCols = { ok: 337.3, bad: 387.65 };
   const ROW_Y = [211.8, 240.6, 269.4, 298.4, 327.2, 356.1, 384.9, 413.8, 442.6, 471.4, 500.3, 536.8, 565.6, 594.5, 623.4, 652.3, 681.1, 709.9];
   const NOTE = { x: 424, w: 145 };
-  const SIGNATURE = { x: 441, y: 732.7, w: 125, h: 28 };
+  // 標籤文字頂端 y=739.4；之前誤把y往上減導致疊到表格，已修正對齊標籤本身。
+  const SIGNATURE = { x: 441, y: 740, w: 125, h: 26 };
 
   function esc(str) {
     return String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

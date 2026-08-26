@@ -43,6 +43,20 @@
     inspectDate: document.getElementById('f-inspectDate'),
     draftStatus: document.getElementById('draftStatus'),
     toast: document.getElementById('toast'),
+
+    batchNewBtn: document.getElementById('batchNewBtn'),
+    batchCreateView: document.getElementById('batchCreateView'),
+    batchActionBar: document.getElementById('batchActionBar'),
+    batchPlantWrap: document.getElementById('batchPlantWrap'),
+    batchSelectAllBtn: document.getElementById('batchSelectAllBtn'),
+    batchClearAllBtn: document.getElementById('batchClearAllBtn'),
+    batchSelectedCount: document.getElementById('batchSelectedCount'),
+    batchQuakeLevel: document.getElementById('bf-quakeLevel'),
+    batchInspector: document.getElementById('bf-inspector'),
+    batchInspectDate: document.getElementById('bf-inspectDate'),
+    batchStatus: document.getElementById('batchStatus'),
+    batchCancelBtn: document.getElementById('batchCancelBtn'),
+    batchSubmitBtn: document.getElementById('batchSubmitBtn'),
   };
 
   const PLANT_LOCATIONS = {
@@ -104,56 +118,186 @@
   }
 
   // ---- 檢查項目：正常/異常 兩態按鈕 + 一律顯示的備註欄 ----
-  const itemsWrap = document.getElementById('itemsWrap');
-  const itemCtrls = ITEMS.map((item) => {
-    if (item.group) {
-      const h = document.createElement('div');
-      h.className = 'checklist-group-header';
-      h.textContent = item.group;
-      itemsWrap.appendChild(h);
-    }
-    const el = document.createElement('div');
-    el.className = 'checklist-item';
-    el.innerHTML = `
-      <div class="item-label">${item.no}. ${item.label}</div>
-      <div class="status-group">
-        <button type="button" class="status-btn" data-status="ok">正常</button>
-        <button type="button" class="status-btn" data-status="bad">異常</button>
-      </div>
-      <div class="item-remark">
-        <textarea placeholder="異常狀況處理&備註…"></textarea>
-      </div>
-    `;
-    itemsWrap.appendChild(el);
-    const btns = Array.from(el.querySelectorAll('.status-btn'));
-    const noteInput = el.querySelector('textarea');
-    let status = null;
-    function applyUI() {
-      btns.forEach((b) => (b.dataset.active = String(b.dataset.status === status)));
-    }
-    btns.forEach((b) => {
-      b.addEventListener('click', () => {
-        status = b.dataset.status;
-        applyUI();
-        scheduleAutosave();
+  // 抽成函式是因為「批次新增」畫面需要一份完全獨立的檢查項目控制項（不同的DOM容器），
+  // 兩份互不影響——每個控制項的狀態都關在自己的closure裡，不靠共用id，天生就可以蓋兩份。
+  function buildItemControls(itemsWrap, onChange) {
+    return ITEMS.map((item) => {
+      if (item.group) {
+        const h = document.createElement('div');
+        h.className = 'checklist-group-header';
+        h.textContent = item.group;
+        itemsWrap.appendChild(h);
+      }
+      const el = document.createElement('div');
+      el.className = 'checklist-item';
+      el.innerHTML = `
+        <div class="item-label">${item.no}. ${item.label}</div>
+        <div class="status-group">
+          <button type="button" class="status-btn" data-status="ok">正常</button>
+          <button type="button" class="status-btn" data-status="bad">異常</button>
+        </div>
+        <div class="item-remark">
+          <textarea placeholder="異常狀況處理&備註…"></textarea>
+        </div>
+      `;
+      itemsWrap.appendChild(el);
+      const btns = Array.from(el.querySelectorAll('.status-btn'));
+      const noteInput = el.querySelector('textarea');
+      let status = null;
+      function applyUI() {
+        btns.forEach((b) => (b.dataset.active = String(b.dataset.status === status)));
+      }
+      btns.forEach((b) => {
+        b.addEventListener('click', () => {
+          status = b.dataset.status;
+          applyUI();
+          onChange && onChange();
+        });
       });
+      noteInput.addEventListener('input', () => onChange && onChange());
+      return {
+        item,
+        getValue: () => ({ status, note: noteInput.value.trim() }),
+        setValue: (v) => {
+          status = (v && v.status) || null;
+          noteInput.value = (v && v.note) || '';
+          applyUI();
+        },
+      };
     });
-    noteInput.addEventListener('input', scheduleAutosave);
-    return {
-      item,
-      getValue: () => ({ status, note: noteInput.value.trim() }),
-      setValue: (v) => {
-        status = (v && v.status) || null;
-        noteInput.value = (v && v.note) || '';
-        applyUI();
-      },
-    };
-  });
+  }
 
+  const itemCtrls = buildItemControls(document.getElementById('itemsWrap'), scheduleAutosave);
   const sigPad = KtSignature.createSignaturePad(document.getElementById('sigWrap'), { onChange: scheduleAutosave });
 
   document.querySelectorAll('#formEditorView input[type=text], #formEditorView input[type=date]').forEach((el) => {
     el.addEventListener('input', scheduleAutosave);
+  });
+
+  // ======================================================================
+  // 批次新增（多電廠地震後檢查）：一次勾選多個電廠、填一次共用答案，
+  // 送出後替每個電廠各自建立一筆獨立紀錄（之後仍可個別修改），並直接產生一份
+  // 包含所有電廠、每廠各一頁的PDF——不需要每個電廠分開匯出分開分享。
+  // ======================================================================
+  const plantCheckboxes = []; // {checkbox, plantName}
+  Object.keys(PLANT_LOCATIONS).forEach((group) => {
+    const h = document.createElement('div');
+    h.className = 'checklist-group-header';
+    h.textContent = group;
+    els.batchPlantWrap.appendChild(h);
+    PLANT_LOCATIONS[group].forEach((site) => {
+      const plantName = `${group}-${site}`;
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px;';
+      label.innerHTML = `<input type="checkbox" value="${escapeHtml(plantName)}" style="width:18px;height:18px;flex-shrink:0;" /> ${escapeHtml(site)}`;
+      els.batchPlantWrap.appendChild(label);
+      const checkbox = label.querySelector('input');
+      checkbox.addEventListener('change', updateBatchSelectedCount);
+      plantCheckboxes.push({ checkbox, plantName });
+    });
+  });
+
+  function updateBatchSelectedCount() {
+    const n = plantCheckboxes.filter((p) => p.checkbox.checked).length;
+    els.batchSelectedCount.textContent = n ? `已選 ${n} 個電廠` : '尚未選擇電廠';
+  }
+
+  els.batchSelectAllBtn.addEventListener('click', () => {
+    plantCheckboxes.forEach((p) => (p.checkbox.checked = true));
+    updateBatchSelectedCount();
+  });
+  els.batchClearAllBtn.addEventListener('click', () => {
+    plantCheckboxes.forEach((p) => (p.checkbox.checked = false));
+    updateBatchSelectedCount();
+  });
+
+  const batchItemCtrls = buildItemControls(document.getElementById('batchItemsWrap'), null);
+  const batchSigPad = KtSignature.createSignaturePad(document.getElementById('batchSigWrap'), {});
+
+  function resetBatchView() {
+    plantCheckboxes.forEach((p) => (p.checkbox.checked = false));
+    updateBatchSelectedCount();
+    els.batchQuakeLevel.value = '';
+    els.batchInspector.value = '';
+    els.batchInspectDate.value = '';
+    batchItemCtrls.forEach(({ setValue }) => setValue({ status: null, note: '' }));
+    batchSigPad.clear();
+    els.batchStatus.textContent = '';
+  }
+
+  function showBatchView() {
+    currentRecordId = null;
+    els.recordsListView.hidden = true;
+    els.formEditorView.hidden = true;
+    els.editorActionBar.hidden = true;
+    els.batchCreateView.hidden = false;
+    els.batchActionBar.hidden = false;
+    els.headerSubtitle.textContent = '批次新增（多電廠）';
+    els.headerBackBtn.dataset.mode = 'batch';
+    resetBatchView();
+    batchSigPad.resize();
+    window.scrollTo(0, 0);
+  }
+
+  els.batchNewBtn.addEventListener('click', showBatchView);
+  els.batchCancelBtn.addEventListener('click', () => showListView());
+
+  function validateBatchForExport(selectedPlants) {
+    const missing = [];
+    if (!selectedPlants.length) missing.push('尚未勾選任何電廠');
+    if (!els.batchInspectDate.value) missing.push('尚未填寫巡檢日期');
+    batchItemCtrls.forEach(({ item, getValue }) => {
+      if (!getValue().status) missing.push(`檢查項目 ${item.no}. ${item.label} 尚未勾選正常/異常`);
+    });
+    if (batchSigPad.isEmpty()) missing.push('尚未簽名');
+    return missing;
+  }
+
+  function buildBatchFilename(count) {
+    const today = fmtTs(Date.now()).slice(0, 10);
+    return `${FORM_TITLE}_批次${count}廠_${today}.pdf`;
+  }
+
+  els.batchSubmitBtn.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const selectedPlants = plantCheckboxes.filter((p) => p.checkbox.checked).map((p) => p.plantName);
+    const missing = validateBatchForExport(selectedPlants);
+    if (missing.length) {
+      showMissingFieldsModal(missing);
+      return;
+    }
+    btn.textContent = '產生中…';
+    btn.disabled = true;
+    els.batchCancelBtn.disabled = true;
+    try {
+      const commonFields = {
+        quakeLevel: els.batchQuakeLevel.value.trim(),
+        inspector: els.batchInspector.value.trim(),
+        inspectDate: els.batchInspectDate.value,
+        items: batchItemCtrls.map(({ item, getValue }) => Object.assign({ no: item.no, label: item.label }, getValue())),
+        signature: batchSigPad.toDataURL(),
+      };
+      const bg = await loadBackground();
+      const pages = [];
+      for (const plantName of selectedPlants) {
+        const data = { formTitle: FORM_TITLE, plantName, ...commonFields };
+        const newId = KtDB.newRecordId(FORM_ID);
+        await KtDB.saveRecord(newId, FORM_ID, data, { markExported: true });
+        pages.push(Report7CheckTemplate.buildPage1(data, bg));
+      }
+      const blob = await KtPdf.renderTemplatedPdf(pages);
+      await KtShare.shareOrSavePdf(blob, buildBatchFilename(selectedPlants.length));
+      showToast(`已建立 ${selectedPlants.length} 筆電廠紀錄並匯出PDF`);
+      showListView();
+    } catch (err) {
+      console.error(err);
+      els.batchStatus.textContent = '部分電廠紀錄可能已建立，但PDF產生失敗，請重試或到紀錄列表個別匯出。';
+      showToast('PDF 產生失敗，請重試');
+    } finally {
+      btn.textContent = '✅ 建立並匯出PDF';
+      btn.disabled = false;
+      els.batchCancelBtn.disabled = false;
+    }
   });
 
   let currentRecordId = null;
@@ -163,6 +307,8 @@
     els.recordsListView.hidden = false;
     els.formEditorView.hidden = true;
     els.editorActionBar.hidden = true;
+    els.batchCreateView.hidden = true;
+    els.batchActionBar.hidden = true;
     els.headerSubtitle.textContent = '附表七・地震5級以上時填寫';
     els.headerBackBtn.dataset.mode = 'home';
     renderRecordsList();
@@ -183,6 +329,8 @@
     els.recordsListView.hidden = true;
     els.formEditorView.hidden = false;
     els.editorActionBar.hidden = false;
+    els.batchCreateView.hidden = true;
+    els.batchActionBar.hidden = true;
     els.headerBackBtn.dataset.mode = 'list';
 
     if (isNew) {
@@ -200,7 +348,7 @@
   }
 
   els.headerBackBtn.addEventListener('click', () => {
-    if (els.headerBackBtn.dataset.mode === 'list') {
+    if (els.headerBackBtn.dataset.mode === 'list' || els.headerBackBtn.dataset.mode === 'batch') {
       showListView();
     } else {
       location.href = '../index.html';
