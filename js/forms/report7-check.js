@@ -137,15 +137,22 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…（限50字）" maxlength="50"></textarea>
+          <textarea placeholder="異常狀況處理&備註…" maxlength="50"></textarea>
+          <div class="char-count">0/50</div>
         </div>
       `;
       itemsWrap.appendChild(el);
       const btns = Array.from(el.querySelectorAll('.status-btn'));
       const noteInput = el.querySelector('textarea');
+      const charCount = el.querySelector('.char-count');
       let status = null;
       function applyUI() {
         btns.forEach((b) => (b.dataset.active = String(b.dataset.status === status)));
+      }
+      function updateCharCount() {
+        const n = noteInput.value.length;
+        charCount.textContent = `${n}/50`;
+        charCount.classList.toggle('near-limit', n >= 45);
       }
       btns.forEach((b) => {
         b.addEventListener('click', () => {
@@ -154,7 +161,10 @@
           onChange && onChange();
         });
       });
-      noteInput.addEventListener('input', () => onChange && onChange());
+      noteInput.addEventListener('input', () => {
+        updateCharCount();
+        onChange && onChange();
+      });
       return {
         item,
         getValue: () => ({ status, note: noteInput.value.trim() }),
@@ -162,6 +172,7 @@
           status = (v && v.status) || null;
           noteInput.value = (v && v.note) || '';
           applyUI();
+          updateCharCount();
         },
       };
     });

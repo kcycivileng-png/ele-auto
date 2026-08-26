@@ -300,6 +300,30 @@ main {
   margin-top: 10px;
 }
 .item-remark[hidden] { display: none; }
+/* 純<textarea>沒設寬度的話瀏覽器預設只有20字元寬，跟上面「正常/異常」按鈕列對不齊 */
+.item-remark textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink-900);
+  resize: vertical;
+  min-height: 44px;
+}
+.item-remark textarea:focus {
+  outline: none;
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(28, 148, 99, 0.15);
+}
+.item-remark .char-count {
+  text-align: right;
+  font-size: 11px;
+  color: var(--ink-400);
+  margin-top: 2px;
+}
+.item-remark .char-count.near-limit { color: #c0392b; }
 
 /* 附表五/六/七這類「正常/異常」兩態檢查表的分組標題 */
 .checklist-group-header {
