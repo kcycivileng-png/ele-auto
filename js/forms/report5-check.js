@@ -152,7 +152,7 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…"></textarea>
+          <textarea placeholder="異常狀況處理&備註…（限50字）" maxlength="50"></textarea>
         </div>
       `;
       itemsWrap.appendChild(el);

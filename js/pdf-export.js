@@ -23,10 +23,9 @@ const KtPdf = (() => {
         size -= 0.5;
         el.style.fontSize = size + 'px';
       }
-      if (el.scrollHeight > el.clientHeight + 1) {
-        el.style.height = 'auto';
-        el.style.maxHeight = 'none';
-      }
+      // 縮到最小字體仍放不下：維持原本的固定高度＋overflow:hidden裁切，
+      // 寧可裁掉多出來的文字，也不要讓文字整段溢出蓋到下面幾列，那樣視覺上更糟。
+      // 各表單另有替填寫欄位加上 maxlength，正常情況下不應該真的走到這裡。
     });
     // 單行、限制「寬度」不能超出的欄位（例如電廠名稱這種橫向並排的欄位，
     // 塞太長會蓋到旁邊的欄位）——縮字體讓寬度塞得下，而不是縮高度。

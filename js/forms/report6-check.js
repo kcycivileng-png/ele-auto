@@ -141,7 +141,7 @@
           <button type="button" class="status-btn" data-status="bad">異常</button>
         </div>
         <div class="item-remark">
-          <textarea placeholder="異常狀況處理&備註…"></textarea>
+          <textarea placeholder="異常狀況處理&備註…（限50字）" maxlength="50"></textarea>
         </div>
       `;
       itemsWrap.appendChild(el);
@@ -555,6 +555,15 @@
     return bgCachePromise;
   }
 
+  async function buildCurrentPdfBlob() {
+    await doSave(false);
+    const data = gatherFormData();
+    const bg = await loadBackground();
+    const page = Report6CheckTemplate.buildPage1(data, bg);
+    const blob = await KtPdf.renderTemplatedPdf([page]);
+    return { blob, filename: buildFilename(data, 'pdf') };
+  }
+
   document.getElementById('exportPdfBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     if (!currentRecordId) return;
@@ -566,19 +575,40 @@
     btn.textContent = '產生中…';
     btn.disabled = true;
     try {
-      await doSave(false);
-      const data = gatherFormData();
-      const bg = await loadBackground();
-      const page = Report6CheckTemplate.buildPage1(data, bg);
-      const blob = await KtPdf.renderTemplatedPdf([page]);
-      await KtShare.shareOrSavePdf(blob, buildFilename(data, 'pdf'));
-      await KtDB.saveRecord(currentRecordId, FORM_ID, data, { markExported: true });
-      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 匯出 PDF`;
+      const { blob, filename } = await buildCurrentPdfBlob();
+      await KtShare.shareOrSavePdf(blob, filename);
+      await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
+      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 下載 PDF`;
     } catch (err) {
       console.error(err);
       showToast('PDF 產生失敗，請重試');
     } finally {
-      btn.textContent = '📄 匯出 PDF';
+      btn.textContent = '⬇️ 下載 PDF';
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('uploadCloudBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (!currentRecordId) return;
+    const missing = validateForExport();
+    if (missing.length) {
+      showMissingFieldsModal(missing);
+      return;
+    }
+    btn.textContent = '上傳中…';
+    btn.disabled = true;
+    try {
+      const { blob, filename } = await buildCurrentPdfBlob();
+      await KtDriveUpload.uploadPdf(blob, filename);
+      await KtDB.saveRecord(currentRecordId, FORM_ID, gatherFormData(), { markExported: true });
+      els.draftStatus.textContent = `已於 ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })} 上傳雲端`;
+      showToast('已上傳到雲端資料夾');
+    } catch (err) {
+      console.error(err);
+      showToast(err && err.message ? err.message : '上傳失敗，請重試');
+    } finally {
+      btn.textContent = '☁️ 上傳雲端';
       btn.disabled = false;
     }
   });
