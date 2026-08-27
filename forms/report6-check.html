@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f6e4f" />
+<title>太陽光電電廠設備颱風過後檢查表</title>
+<link rel="manifest" href="../manifest.json" />
+<link rel="icon" href="../icons/icon-192.png" />
+<link rel="apple-touch-icon" href="../icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <button type="button" class="back-btn" id="headerBackBtn">‹</button>
+  <div>
+    <h1>太陽光電電廠設備颱風過後檢查表</h1>
+    <div class="subtitle" id="headerSubtitle">附表六・颱風警報解除後填寫</div>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 紀錄列表畫面 ================= -->
+  <section id="recordsListView">
+    <button type="button" class="csv-export-all-btn" id="exportAllCsvBtn">
+      📊 匯出全部紀錄 CSV<span class="csv-count" id="csvCount"></span>
+    </button>
+    <button type="button" class="new-record-btn" id="newRecordBtn">＋ 新增一筆</button>
+    <button type="button" class="new-record-btn" id="batchNewBtn" style="background:var(--green-100);color:var(--green-900);margin-top:8px;">🌪️ 批次新增（多電廠颱風過後檢查）</button>
+
+    <div class="records-toolbar">
+      <select id="sortSelect">
+        <option value="updated_desc">更新時間：新→舊</option>
+        <option value="updated_asc">更新時間：舊→新</option>
+        <option value="plant_asc">電廠名稱：A→Z</option>
+      </select>
+      <input type="text" id="filterInput" placeholder="搜尋電廠名稱…" />
+    </div>
+
+    <button type="button" class="select-mode-btn" id="selectModeBtn">☑ 選取多筆（一鍵匯出／刪除）</button>
+    <div class="select-toolbar" id="selectToolbar" hidden>
+      <button type="button" class="small-btn" id="selectAllRecordsBtn">全選</button>
+      <button type="button" class="small-btn" id="selectNoneRecordsBtn">取消全選</button>
+      <span class="select-count" id="selectCount">已選 0 筆</span>
+    </div>
+
+    <div id="recordsList"></div>
+    <div class="empty-state" id="emptyState" hidden>尚未有任何紀錄，點上方「＋ 新增一筆」開始填寫。</div>
+
+    <footer class="page-footer">紀錄與簽名僅儲存在本機裝置，不會上傳至任何伺服器。<br />版本 <span id="appVersion"></span></footer>
+  </section>
+
+  <!-- ================= 表單編輯畫面 ================= -->
+  <section id="formEditorView" hidden>
+    <section class="section-card">
+      <h2><span class="num">1</span>基本資料</h2>
+      <div class="field">
+        <label class="field-label">電廠名稱（僅供App內排序/篩選用，原始表單無此欄位）</label>
+        <div style="display:flex;gap:8px;">
+          <select id="f-plantGroup" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;">
+            <option value="">請選擇群組</option>
+          </select>
+          <select id="f-plantSite" style="flex:1.4;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;" disabled>
+            <option value="">請先選群組</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">颱風名稱</label>
+        <input type="text" id="f-typhoonName" />
+      </div>
+      <div class="field">
+        <label class="field-label">颱風等級</label>
+        <input type="text" id="f-typhoonLevel" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢人員</label>
+        <input type="text" id="f-inspector" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢日期</label>
+        <input type="date" id="f-inspectDate" />
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">2</span>檢查項目</h2>
+      <div id="itemsWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>巡檢人員簽名</h2>
+      <div id="sigWrap"></div>
+    </section>
+
+    <div class="draft-status" id="draftStatus">尚未儲存</div>
+    <footer class="page-footer">草稿與簽名僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
+
+  <!-- ================= 批次新增畫面（多電廠共用答案） ================= -->
+  <section id="batchCreateView" hidden>
+    <div class="hint" style="margin-bottom:10px;">
+      先勾選要一起處理的電廠，填一次共用答案，送出後會替每個電廠各自建立一筆獨立紀錄（之後仍可個別修改），並直接產生一份包含所有電廠、每廠各一頁的PDF。
+    </div>
+    <section class="section-card">
+      <h2><span class="num">1</span>選擇電廠</h2>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button type="button" class="small-btn" id="batchSelectAllBtn">全選</button>
+        <button type="button" class="small-btn" id="batchClearAllBtn">取消全選</button>
+        <span class="hint" id="batchSelectedCount" style="align-self:center;"></span>
+      </div>
+      <div id="batchPlantWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">2</span>共用基本資料</h2>
+      <div class="field">
+        <label class="field-label">颱風名稱</label>
+        <input type="text" id="bf-typhoonName" />
+      </div>
+      <div class="field">
+        <label class="field-label">颱風等級</label>
+        <input type="text" id="bf-typhoonLevel" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢人員</label>
+        <input type="text" id="bf-inspector" />
+      </div>
+      <div class="field">
+        <label class="field-label">巡檢日期</label>
+        <input type="date" id="bf-inspectDate" />
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">3</span>共用檢查項目</h2>
+      <div class="hint" style="margin-bottom:10px;">每個電廠一開始都會套用這裡填的答案，之後可以到各電廠自己的紀錄裡個別調整。</div>
+      <div id="batchItemsWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>巡檢人員簽名</h2>
+      <div class="hint" style="margin-bottom:10px;">同一份簽名會套用到本次批次建立的每個電廠。</div>
+      <div id="batchSigWrap"></div>
+    </section>
+
+    <div class="draft-status" id="batchStatus"></div>
+    <footer class="page-footer">草稿與簽名僅儲存在本機裝置，不會上傳至任何伺服器。</footer>
+  </section>
+</main>
+
+<div class="action-bar" id="editorActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="saveDraftBtn">💾 儲存草稿</button>
+  <button type="button" class="btn btn-primary" id="exportPdfBtn">📄 匯出 PDF</button>
+  <button type="button" class="btn btn-secondary" id="uploadCloudBtn">☁️ 上傳雲端</button>
+</div>
+
+<div class="action-bar" id="batchActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="batchCancelBtn">取消</button>
+  <button type="button" class="btn btn-primary" id="batchSubmitBtn">✅ 建立並匯出PDF</button>
+</div>
+
+<div class="action-bar" id="bulkActionBar" hidden>
+  <button type="button" class="btn btn-secondary" id="bulkDeleteBtn">🗑 刪除選取</button>
+  <button type="button" class="btn btn-primary" id="bulkExportBtn">📄 匯出選取PDF</button>
+  <button type="button" class="btn" id="exitSelectModeBtn" style="flex:0 0 100%;background:none;color:var(--ink-400);font-weight:400;padding:4px;">取消選取</button>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="modal-backdrop" id="missingFieldsModal" hidden>
+  <div class="modal-sheet">
+    <h3>還有欄位未完成</h3>
+    <p class="hint">請先完成以下項目才能匯出 PDF：</p>
+    <ul id="missingFieldsList" style="margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.9;color:#c0392b;"></ul>
+    <button type="button" class="small-btn" style="width:100%;text-align:center;" id="closeMissingModalBtn">我知道了</button>
+  </div>
+</div>
+
+<script src="../vendor/jspdf.umd.min.js"></script>
+<script src="../vendor/html2canvas.min.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/bulk-select.js"></script>
+<script src="../js/drive-upload.js"></script>
+<script src="../js/signature.js"></script>
+<script src="../js/pdf-export.js"></script>
+<script src="../js/csv-export.js"></script>
+<script src="../js/share.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/forms/report6-check-template.js"></script>
+<script src="../js/forms/report6-check.js"></script>
+<script>
+  fetch('../service-worker.js').then((r) => r.text()).then((t) => {
+    const m = t.match(/CACHE_VERSION\s*=\s*'([^']+)'/);
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = m ? m[1] : '未知';
+  }).catch(() => {});
+</script>
+</body>
+</html>
