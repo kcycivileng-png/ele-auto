@@ -67,12 +67,9 @@ const InverterCheckTemplate = (() => {
   }
 
   function buildRepairNoteText(data) {
-    const itemRemarks = (data.items || []).filter((it) => it.remark).map((it) => `${it.no} ${it.remark}`);
-    if (data.repairNote.noIssue && !itemRemarks.length) return '無異常';
-    const bits = [];
-    if (data.repairNote.text) bits.push(data.repairNote.text);
-    bits.push(...itemRemarks);
-    return bits.join('；') || '（未填寫）';
+    const hasAbnormal = (data.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    if (!hasAbnormal) return (data.repairNote && data.repairNote.text) || '無異常';
+    return (data.repairNote && data.repairNote.text) || '（未填寫）';
   }
 
   function photoOf(data, id) {
@@ -82,6 +79,20 @@ const InverterCheckTemplate = (() => {
 
   function placeSingle(images, boxes, photo) {
     if (photo && boxes && boxes[0]) images.push({ dataUrl: photo, x: boxes[0].x, y: boxes[0].y, w: boxes[0].w, h: boxes[0].h });
+  }
+
+  function captionOf(data, id) {
+    const g = (data.photoGroups || []).find((x) => x.id === id);
+    return (g && g.caption) || '';
+  }
+
+  function captionStrip(box, caption) {
+    if (!caption || !box) return '';
+    const y = box.y + box.h - 15;
+    return (
+      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
+      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
+    );
   }
 
   // ---- Page 1（P28）：逆變器檢查表 ----
@@ -114,10 +125,14 @@ const InverterCheckTemplate = (() => {
   // ---- Page 2（P29）：INVERTER清潔後外觀 ----
   function buildPagePhotos(data, bgDataUrl) {
     const images = [];
+    let textHtml = '';
     Object.keys(P_PHOTOS).forEach((id) => {
       placeSingle(images, P_PHOTOS[id], photoOf(data, id));
+      if (id === 'invAbn1' || id === 'invAbn2') {
+        textHtml += captionStrip(P_PHOTOS[id][0], captionOf(data, id));
+      }
     });
-    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
+    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
   // ---- Page 3（P30）：逆變器接地電阻檢查（固定15列） ----
@@ -141,6 +156,7 @@ const InverterCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_GROUND.photo[0]], photoOf(data, 'groundAbn1'));
     placeSingle(images, [P_GROUND.photo[1]], photoOf(data, 'groundAbn2'));
+    textHtml += captionStrip(P_GROUND.photo[0], captionOf(data, 'groundAbn1')) + captionStrip(P_GROUND.photo[1], captionOf(data, 'groundAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }
 

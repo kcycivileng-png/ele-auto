@@ -83,7 +83,15 @@
     </section>
 
     <section class="section-card">
-      <h2><span class="num">3</span>DC BOX熱顯像相片</h2>
+      <h2><span class="num">3</span>檢修說明</h2>
+      <div class="hint" style="margin-bottom:10px;">上面有檢查項目勾選「異常」或「調整/更換」時，請務必在這裡說明；全部勾選正常則不用填，會自動記錄為「無異常」。</div>
+      <div class="field">
+        <textarea id="f-repairNote" placeholder="請描述異常狀況、原因與處理方式…"></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>DC BOX熱顯像相片</h2>
       <div class="hint" style="margin-bottom:10px;">
         匯出PDF時，照片會完整縮放置入表格框格（不裁切內容）。設備1（熱顯像＋可見光）為必填，若電廠有多台直流箱可繼續填設備2、3；異常項目相片僅異常時才需提供。
       </div>
@@ -91,7 +99,7 @@
     </section>
 
     <section class="section-card">
-      <h2><span class="num">4</span>直流箱組串絕緣電阻檢查（年）</h2>
+      <h2><span class="num">5</span>直流箱組串絕緣電阻檢查（年）</h2>
       <div class="field">
         <label class="field-label">該年度量測日期</label>
         <input type="date" id="f-insulationDate" />
@@ -106,7 +114,7 @@
     </section>
 
     <section class="section-card">
-      <h2><span class="num">5</span>直流箱接地電阻檢查（年）</h2>
+      <h2><span class="num">6</span>直流箱接地電阻檢查（年）</h2>
       <div class="field">
         <label class="field-label">該年度量測日期</label>
         <input type="date" id="f-groundingDate" />
@@ -117,19 +125,6 @@
       <div id="groundingTableWrap"></div>
       <div style="margin-top:14px;">
         <div id="groundPhotoWrap"></div>
-      </div>
-    </section>
-
-    <section class="section-card">
-      <h2><span class="num">6</span>檢修說明</h2>
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;">
-          <input type="checkbox" id="f-noIssue" style="width:18px;height:18px;" /> 無異常
-        </label>
-      </div>
-      <div class="field" id="repairNoteField">
-        <label class="field-label">說明內容</label>
-        <textarea id="f-repairNote" placeholder="請描述檢修內容、原因與處理方式…"></textarea>
       </div>
     </section>
 

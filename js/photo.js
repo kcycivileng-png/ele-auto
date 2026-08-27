@@ -37,10 +37,13 @@ const KtPhoto = (() => {
 
   /**
    * @param {HTMLElement} container
-   * @param {{id:string, title:string, hint?:string, single?:boolean, max?:number, onChange?:Function}} opts
+   * @param {{id:string, title:string, hint?:string, single?:boolean, max?:number, caption?:boolean, onChange?:Function}} opts
    *   single: true 時只能有一張照片，選新的會直接取代舊的（不需要先手動刪除）。
    *   max: 上限張數（例如原始表格裡「太陽能板(近)」實際有4格，就設 max:4），
    *        超過上限的部分會被忽略，並在按鈕旁顯示「目前張數/上限」。
+   *   caption: true 時額外提供一個文字欄，用於「異常項目」這類欄位——原始表格上只有
+   *        「異常項目-」的空白框格，使用者需要自己說明這張照片是什麼問題，不能只丟一張
+   *        照片沒有文字說明。
    */
   function createPhotoGroup(container, opts) {
     const wrap = document.createElement('div');
@@ -49,6 +52,7 @@ const KtPhoto = (() => {
     wrap.innerHTML = `
       <div class="pg-title">${opts.title}</div>
       ${opts.hint ? `<div class="hint">${opts.hint}</div>` : ''}
+      ${opts.caption ? '<textarea class="pg-caption" placeholder="請描述異常內容…" maxlength="60"></textarea>' : ''}
       <div class="photo-thumbs"></div>
       <label class="photo-add-btn">
         📷 ${opts.single ? '拍照/選取照片' : '新增照片'}${opts.max ? `<span class="pg-count"></span>` : ''}
@@ -60,6 +64,8 @@ const KtPhoto = (() => {
     const thumbsEl = wrap.querySelector('.photo-thumbs');
     const input = wrap.querySelector('input[type=file]');
     const countEl = wrap.querySelector('.pg-count');
+    const captionEl = wrap.querySelector('.pg-caption');
+    if (captionEl) captionEl.addEventListener('input', () => opts.onChange && opts.onChange(photos));
     let photos = []; // array of dataURL strings
 
     function updateCountLabel() {
@@ -115,6 +121,8 @@ const KtPhoto = (() => {
     return {
       getPhotos: () => photos.slice(),
       setPhotos: (arr) => { photos = (arr || []).slice(); render(); },
+      getCaption: () => (captionEl ? captionEl.value.trim() : ''),
+      setCaption: (v) => { if (captionEl) captionEl.value = v || ''; },
     };
   }
 

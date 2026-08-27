@@ -43,9 +43,14 @@ const SolarModuleCheckTemplate = (() => {
     ],
   };
 
-  // P18 熱顯像頁：對應「檢查項目-異常位置1」的「太陽能板熱顯像相片」框格
+  // P18 熱顯像頁：溫度異常位置圖(1格) + 異常位置1/2 各2格(熱顯像+白光對照)，共5格。
+  // 「測量及判定異常標準」是原始文件本身的固定說明文字，直接印在底圖上，不需要程式疊字。
   const P_THERMAL = {
-    thermal: { x: 57.5, y: 425.7, w: 237.8, h: 113.4 },
+    positionDiagram: { x: 53, y: 148, w: 488, h: 65 },
+    position1Thermal: { x: 50.8, y: 425.4, w: 244.9, h: 114 },
+    position1Visible: { x: 295.7, y: 425.4, w: 249.2, h: 114 },
+    position2Thermal: { x: 50.8, y: 555.3, w: 244.9, h: 114.8 },
+    position2Visible: { x: 295.7, y: 555.3, w: 249.2, h: 114.8 },
   };
 
   const P4 = {
@@ -139,12 +144,29 @@ const SolarModuleCheckTemplate = (() => {
   // ---- Page 3（P18）：太陽能模組熱顯像檢查 ----
   function buildPageThermal(data, bgDataUrl) {
     const images = [];
-    const photo = photoOf(data, 'thermal');
-    if (photo) {
-      const box = P_THERMAL.thermal;
-      images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
+    let textHtml = '';
+    const diagram = photoOf(data, 'positionDiagram');
+    if (diagram) {
+      const box = P_THERMAL.positionDiagram;
+      images.push({ dataUrl: diagram, x: box.x, y: box.y, w: box.w, h: box.h });
     }
-    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
+    ['position1', 'position2'].forEach((id) => {
+      const photos = photosOf(data, id);
+      const thermalBox = P_THERMAL[`${id}Thermal`];
+      const visibleBox = P_THERMAL[`${id}Visible`];
+      if (photos[0]) images.push({ dataUrl: photos[0], x: thermalBox.x, y: thermalBox.y, w: thermalBox.w, h: thermalBox.h });
+      if (photos[1]) images.push({ dataUrl: photos[1], x: visibleBox.x, y: visibleBox.y, w: visibleBox.w, h: visibleBox.h });
+      const g = (data.photoGroups || []).find((x) => x.id === id);
+      if (g && g.caption) {
+        // 原始表格本身沒有「異常說明」欄位，疊一條淺底文字在照片底部當標註，
+        // 不新增底圖以外的排版結構。
+        const capW = (visibleBox.x + visibleBox.w) - thermalBox.x;
+        const capY = thermalBox.y + thermalBox.h - 15;
+        textHtml += `<div style="position:absolute;left:${thermalBox.x}px;top:${capY}px;width:${capW}px;height:15px;background:rgba(255,255,255,0.82);"></div>`;
+        textHtml += textDiv(thermalBox.x + 2, capY + 1, capW - 4, g.caption, { size: 8.5, autofit: true, h: 13, min: 6.5 });
+      }
+    });
+    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
   // ---- Page 4（P19）：太陽能模組接地連續性檢查 ----

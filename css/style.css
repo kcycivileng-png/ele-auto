@@ -356,6 +356,24 @@ main {
   margin-bottom: 4px;
 }
 
+.photo-group .pg-caption {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink-900);
+  resize: vertical;
+  margin-bottom: 8px;
+}
+.photo-group .pg-caption:focus {
+  outline: none;
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(28, 148, 99, 0.15);
+}
+
 .photo-thumbs {
   display: flex;
   flex-wrap: wrap;

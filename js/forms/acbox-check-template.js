@@ -88,12 +88,9 @@ const AcboxCheckTemplate = (() => {
   }
 
   function buildRepairNoteText(data) {
-    const itemRemarks = (data.items || []).filter((it) => it.remark).map((it) => `${it.no} ${it.remark}`);
-    if (data.repairNote.noIssue && !itemRemarks.length) return '無異常';
-    const bits = [];
-    if (data.repairNote.text) bits.push(data.repairNote.text);
-    bits.push(...itemRemarks);
-    return bits.join('；') || '（未填寫）';
+    const hasAbnormal = (data.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    if (!hasAbnormal) return (data.repairNote && data.repairNote.text) || '無異常';
+    return (data.repairNote && data.repairNote.text) || '（未填寫）';
   }
 
   function photoOf(data, id) {
@@ -103,6 +100,20 @@ const AcboxCheckTemplate = (() => {
 
   function placeSingle(images, boxes, photo) {
     if (photo && boxes && boxes[0]) images.push({ dataUrl: photo, x: boxes[0].x, y: boxes[0].y, w: boxes[0].w, h: boxes[0].h });
+  }
+
+  function captionOf(data, id) {
+    const g = (data.photoGroups || []).find((x) => x.id === id);
+    return (g && g.caption) || '';
+  }
+
+  function captionStrip(box, caption) {
+    if (!caption || !box) return '';
+    const y = box.y + box.h - 15;
+    return (
+      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
+      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
+    );
   }
 
   // ---- Page 1（P24）：交流箱檢查表 ----
@@ -134,10 +145,14 @@ const AcboxCheckTemplate = (() => {
   // ---- Page 2（P25）：AC BOX熱顯像 ----
   function buildPageThermal(data, bgDataUrl) {
     const images = [];
+    let textHtml = '';
     Object.keys(P_THERMAL).forEach((id) => {
       placeSingle(images, P_THERMAL[id], photoOf(data, id));
+      if (id === 'thermalAbn1' || id === 'thermalAbn2') {
+        textHtml += captionStrip(P_THERMAL[id][0], captionOf(data, id));
+      }
     });
-    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
+    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
   function buildMeasureRows(P, rows, offset) {
@@ -167,11 +182,12 @@ const AcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_INSUL.photo[0]], photoOf(data, 'insulAbn1'));
     placeSingle(images, [P_INSUL.photo[1]], photoOf(data, 'insulAbn2'));
+    const captionHtml = captionStrip(P_INSUL.photo[0], captionOf(data, 'insulAbn1')) + captionStrip(P_INSUL.photo[1], captionOf(data, 'insulAbn2'));
     return {
       pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl,
       rects: primary.rects.concat(secondary.rects),
       images,
-      textHtml: primary.textHtml + secondary.textHtml,
+      textHtml: primary.textHtml + secondary.textHtml + captionHtml,
     };
   }
 
@@ -196,6 +212,7 @@ const AcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_GROUND.photo[0]], photoOf(data, 'groundAbn1'));
     placeSingle(images, [P_GROUND.photo[1]], photoOf(data, 'groundAbn2'));
+    textHtml += captionStrip(P_GROUND.photo[0], captionOf(data, 'groundAbn1')) + captionStrip(P_GROUND.photo[1], captionOf(data, 'groundAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }
 

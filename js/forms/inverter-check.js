@@ -27,10 +27,10 @@
     { id: 'invPhoto4', title: '檢查項目-INVERTER清潔後外觀 設備4 (選填)', single: true },
     { id: 'invPhoto5', title: '檢查項目-INVERTER清潔後外觀 設備5 (選填)', single: true },
     { id: 'invPhoto6', title: '檢查項目-INVERTER清潔後外觀 設備6 (選填)', single: true },
-    { id: 'invAbn1', title: '檢查項目-異常項目1 (異常時提供，無則免填)', single: true },
-    { id: 'invAbn2', title: '檢查項目-異常項目2 (異常時提供，無則免填)', single: true },
-    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true },
-    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true },
+    { id: 'invAbn1', title: '檢查項目-異常項目1 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'invAbn2', title: '檢查項目-異常項目2 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true, caption: true },
+    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true, caption: true },
   ];
   const MAIN_PHOTO_IDS = ['invPhoto1', 'invPhoto2', 'invPhoto3', 'invPhoto4', 'invPhoto5', 'invPhoto6', 'invAbn1', 'invAbn2'];
   const GROUND_PHOTO_IDS = ['groundAbn1', 'groundAbn2'];
@@ -56,9 +56,7 @@
     checkDate: document.getElementById('f-checkDate'),
     inspector: document.getElementById('f-inspector'),
     groundingDate: document.getElementById('f-groundingDate'),
-    noIssue: document.getElementById('f-noIssue'),
     repairNote: document.getElementById('f-repairNote'),
-    repairNoteField: document.getElementById('repairNoteField'),
     draftStatus: document.getElementById('draftStatus'),
     toast: document.getElementById('toast'),
 
@@ -145,6 +143,7 @@
       id: g.id,
       title: g.title,
       single: g.single,
+      caption: g.caption,
       onChange: () => scheduleAutosave(),
     });
   });
@@ -160,11 +159,6 @@
     ],
   });
 
-  function applyNoIssueUI() {
-    els.repairNoteField.style.display = els.noIssue.checked ? 'none' : '';
-  }
-  els.noIssue.addEventListener('change', () => { applyNoIssueUI(); scheduleAutosave(); });
-  applyNoIssueUI();
 
   document.querySelectorAll('#formEditorView input[type=text], #formEditorView input[type=date], #formEditorView input[type=number], #formEditorView textarea').forEach((el) => {
     el.addEventListener('input', scheduleAutosave);
@@ -245,8 +239,8 @@
       items: [],
       groundingDate: '',
       groundingRows: [],
-      repairNote: { noIssue: false, text: '' },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
+      repairNote: { text: '' },
+      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [], caption: '' })),
     };
   }
 
@@ -390,7 +384,7 @@
       groundingDate: src.groundingDate || '',
       groundingRows: (src.groundingRows || []).map((r) => ({ ...r })),
       repairNote: { ...src.repairNote },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
+      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [], caption: '' })),
     };
     const newId = KtDB.newRecordId(FORM_ID);
     await KtDB.saveRecord(newId, FORM_ID, copied);
@@ -410,10 +404,14 @@
       groundingDate: els.groundingDate.value,
       groundingRows: groundingTable.getRows(),
       repairNote: {
-        noIssue: els.noIssue.checked,
         text: els.repairNote.value.trim(),
       },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: photoCtrls[g.id].getPhotos() })),
+      photoGroups: PHOTO_GROUPS.map((g) => ({
+        id: g.id,
+        title: g.title,
+        photos: photoCtrls[g.id].getPhotos(),
+        caption: g.caption ? photoCtrls[g.id].getCaption() : undefined,
+      })),
     };
   }
 
@@ -422,13 +420,11 @@
     els.checkDate.value = data.meta?.checkDate || '';
     els.inspector.value = data.meta?.inspector || '';
     els.groundingDate.value = data.groundingDate || '';
-    els.noIssue.checked = !!data.repairNote?.noIssue;
     els.repairNote.value = data.repairNote?.text || '';
-    applyNoIssueUI();
 
     checklistCtrls.forEach(({ ctrl }, idx) => {
       const saved = (data.items || []).find((it) => it.no === CHECK_ITEMS[idx].no);
-      ctrl.setValue(saved || { status: null, remark: '' });
+      ctrl.setValue(saved || { status: null });
     });
 
     groundingTable.setRows(data.groundingRows || []);
@@ -436,6 +432,7 @@
     PHOTO_GROUPS.forEach((g) => {
       const saved = (data.photoGroups || []).find((x) => x.id === g.id);
       photoCtrls[g.id].setPhotos(saved ? saved.photos : []);
+      if (g.caption && photoCtrls[g.id].setCaption) photoCtrls[g.id].setCaption(saved ? saved.caption : '');
     });
   }
 
@@ -476,9 +473,15 @@
     if (!els.checkDate.value) missing.push('尚未填寫檢查日期');
     if (!els.inspector.value.trim()) missing.push('尚未填寫檢查人員');
 
+    let hasAbnormal = false;
     checklistCtrls.forEach(({ item, ctrl }) => {
-      if (!ctrl.getValue().status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      const status = ctrl.getValue().status;
+      if (!status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      if (status === 'bad' || status === 'fixed') hasAbnormal = true;
     });
+    if (hasAbnormal && !els.repairNote.value.trim()) {
+      missing.push('有檢查項目勾選「異常」或「調整/更換」，請在「檢修說明」填寫說明');
+    }
 
     if (photoCtrls.invPhoto1.getPhotos().length === 0) missing.push('「INVERTER清潔後外觀 設備1」尚未上傳照片');
 
@@ -603,7 +606,7 @@
 
   const CSV_HEADERS = [
     '表單名稱', '電廠名稱', '檢查日期', '檢查人員',
-    ...CHECK_ITEMS.flatMap((it) => [`${it.no}狀態`, `${it.no}備註`]),
+    ...CHECK_ITEMS.map((it) => `${it.no}狀態`),
     '接地電阻量測日期',
     ...Array.from({ length: GROUND_ROWS }, (_, i) => [`接地${i + 1}逆變器編號`, `接地${i + 1}量測值(Ω)`, `接地${i + 1}結果`, `接地${i + 1}改善對策`]).flat(),
     '檢修說明', '紀錄建立時間', '最後更新時間',
@@ -611,16 +614,17 @@
 
   function recordToCsvRow(record) {
     const d = record.data || {};
-    const items = CHECK_ITEMS.flatMap((ci) => {
+    const items = CHECK_ITEMS.map((ci) => {
       const found = (d.items || []).find((x) => x.no === ci.no) || {};
-      return [STATUS_LABEL[found.status] || '', found.remark || ''];
+      return STATUS_LABEL[found.status] || '';
     });
     const grounding = [];
     for (let i = 0; i < GROUND_ROWS; i++) {
       const r = (d.groundingRows || [])[i] || {};
       grounding.push(r.boxNo || '', r.value || '', r.result || '', r.action || '');
     }
-    const repairText = d.repairNote?.noIssue ? '無異常' : (d.repairNote?.text || '');
+    const hasAbnormal = (d.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    const repairText = hasAbnormal ? (d.repairNote?.text || '') : (d.repairNote?.text || '無異常');
     return [
       FORM_TITLE,
       d.meta?.plantName || '',

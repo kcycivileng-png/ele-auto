@@ -15,16 +15,26 @@
   ];
 
   // max：對應原始表格裡實際的框格數量（太陽能板(近)原始有4格、(遠)有2格），
-  // 沒有 max 的欄位維持單張（rack/clamp各1格；thermal/groundAbn屬於「異常才提供」的證據照，
-  // 原始表格雖有多格但App只要求異常時至少附1張）。
-  const PHOTO_GROUPS = [
+  // 沒有 max 的欄位維持單張（rack/clamp各1格）。
+  const ROUTINE_PHOTO_GROUPS = [
     { id: 'rack', title: '檢查項目-模組支架 (拍攝支架)', single: true },
     { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)', single: true },
     { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)', max: 4 },
     { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)', max: 2 },
-    { id: 'thermal', title: '檢查項目-太陽能模組熱顯像 (異常時提供)', single: true },
-    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', single: true },
   ];
+  // 熱顯像檢查獨立一區：先給量測/判定標準當參考，再依序拍「溫度異常位置圖」、
+  // 「異常位置1」「異常位置2」——每個異常位置各要熱顯像+白光對照2張（依上傳順序對應
+  // 左右框格），並各自附一段文字說明是什麼問題。全部沒有異常時，這3個欄位都可以留空
+  // （原始表格本身「無使用則不刪減表格」）。
+  const THERMAL_PHOTO_GROUPS = [
+    { id: 'positionDiagram', title: '檢查項目-溫度異常位置圖（需標示拍攝區塊；無使用則不刪減表格）', single: true },
+    { id: 'position1', title: '異常位置1（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2, caption: true },
+    { id: 'position2', title: '異常位置2（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2, caption: true },
+  ];
+  const GROUND_PHOTO_GROUPS = [
+    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', single: true, caption: true },
+  ];
+  const PHOTO_GROUPS = [...ROUTINE_PHOTO_GROUPS, ...THERMAL_PHOTO_GROUPS, ...GROUND_PHOTO_GROUPS];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };
 
@@ -47,9 +57,7 @@
     checkDate: document.getElementById('f-checkDate'),
     inspector: document.getElementById('f-inspector'),
     groundingDate: document.getElementById('f-groundingDate'),
-    noIssue: document.getElementById('f-noIssue'),
     repairNote: document.getElementById('f-repairNote'),
-    repairNoteField: document.getElementById('repairNoteField'),
     draftStatus: document.getElementById('draftStatus'),
     toast: document.getElementById('toast'),
 
@@ -129,18 +137,26 @@
     Object.assign({ item }, { ctrl: KtFormKit.createChecklistItem(checklistWrap, { label: item.label, onChange: scheduleAutosave }) })
   );
 
-  // ---- 建立相片欄位 ----
+  // ---- 建立相片欄位（分3區：例行相片／熱顯像檢查／接地連續性異常照片） ----
   const photoWrap = document.getElementById('photoWrap');
+  const thermalPhotoWrap = document.getElementById('thermalPhotoWrap');
+  const groundPhotoWrap = document.getElementById('groundPhotoWrap');
   const photoCtrls = {};
-  PHOTO_GROUPS.forEach((g) => {
-    photoCtrls[g.id] = KtPhoto.createPhotoGroup(photoWrap, {
-      id: g.id,
-      title: g.title,
-      single: g.single,
-      max: g.max,
-      onChange: () => scheduleAutosave(),
+  function mountPhotoGroups(list, wrap) {
+    list.forEach((g) => {
+      photoCtrls[g.id] = KtPhoto.createPhotoGroup(wrap, {
+        id: g.id,
+        title: g.title,
+        single: g.single,
+        max: g.max,
+        caption: g.caption,
+        onChange: () => scheduleAutosave(),
+      });
     });
-  });
+  }
+  mountPhotoGroups(ROUTINE_PHOTO_GROUPS, photoWrap);
+  mountPhotoGroups(THERMAL_PHOTO_GROUPS, thermalPhotoWrap);
+  mountPhotoGroups(GROUND_PHOTO_GROUPS, groundPhotoWrap);
 
   // ---- 建立接地連續性量測表（固定10列，比照Word） ----
   const groundingTable = KtFormKit.createEditableTable(document.getElementById('groundingTableWrap'), {
@@ -154,12 +170,6 @@
     ],
   });
 
-  // ---- 無異常勾選連動 ----
-  function applyNoIssueUI() {
-    els.repairNoteField.style.display = els.noIssue.checked ? 'none' : '';
-  }
-  els.noIssue.addEventListener('change', () => { applyNoIssueUI(); scheduleAutosave(); });
-  applyNoIssueUI();
 
   document.querySelectorAll('#formEditorView input[type=text], #formEditorView input[type=date], #formEditorView input[type=number], #formEditorView textarea').forEach((el) => {
     el.addEventListener('input', scheduleAutosave);
@@ -244,8 +254,8 @@
       items: [],
       groundingDate: '',
       groundingRows: [],
-      repairNote: { noIssue: false, text: '' },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
+      repairNote: { text: '' },
+      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [], caption: '' })),
     };
   }
 
@@ -391,7 +401,7 @@
       groundingDate: src.groundingDate || '',
       groundingRows: (src.groundingRows || []).map((r) => ({ ...r })),
       repairNote: { ...src.repairNote },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [] })),
+      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: [], caption: '' })),
     };
     const newId = KtDB.newRecordId(FORM_ID);
     await KtDB.saveRecord(newId, FORM_ID, copied);
@@ -414,10 +424,14 @@
       groundingDate: els.groundingDate.value,
       groundingRows: groundingTable.getRows(),
       repairNote: {
-        noIssue: els.noIssue.checked,
         text: els.repairNote.value.trim(),
       },
-      photoGroups: PHOTO_GROUPS.map((g) => ({ id: g.id, title: g.title, photos: photoCtrls[g.id].getPhotos() })),
+      photoGroups: PHOTO_GROUPS.map((g) => ({
+        id: g.id,
+        title: g.title,
+        photos: photoCtrls[g.id].getPhotos(),
+        caption: g.caption ? photoCtrls[g.id].getCaption() : undefined,
+      })),
     };
   }
 
@@ -426,13 +440,11 @@
     els.checkDate.value = data.meta?.checkDate || '';
     els.inspector.value = data.meta?.inspector || '';
     els.groundingDate.value = data.groundingDate || '';
-    els.noIssue.checked = !!data.repairNote?.noIssue;
     els.repairNote.value = data.repairNote?.text || '';
-    applyNoIssueUI();
 
     checklistCtrls.forEach(({ ctrl }, idx) => {
       const saved = (data.items || []).find((it) => it.no === CHECK_ITEMS[idx].no);
-      ctrl.setValue(saved || { status: null, remark: '' });
+      ctrl.setValue(saved || { status: null });
     });
 
     groundingTable.setRows(data.groundingRows || []);
@@ -440,6 +452,7 @@
     PHOTO_GROUPS.forEach((g) => {
       const saved = (data.photoGroups || []).find((x) => x.id === g.id);
       photoCtrls[g.id].setPhotos(saved ? saved.photos : []);
+      if (g.caption && photoCtrls[g.id].setCaption) photoCtrls[g.id].setCaption(saved ? saved.caption : '');
     });
   }
 
@@ -487,9 +500,15 @@
     if (!els.checkDate.value) missing.push('尚未填寫檢查日期');
     if (!els.inspector.value.trim()) missing.push('尚未填寫檢查人員');
 
+    let hasAbnormal = false;
     checklistCtrls.forEach(({ item, ctrl }) => {
-      if (!ctrl.getValue().status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      const status = ctrl.getValue().status;
+      if (!status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      if (status === 'bad' || status === 'fixed') hasAbnormal = true;
     });
+    if (hasAbnormal && !els.repairNote.value.trim()) {
+      missing.push('有檢查項目勾選「異常」或「調整/更換」，請在「檢修說明」填寫說明');
+    }
 
     const groundingRows = groundingTable.getRows();
     const item17 = checklistCtrls[6].ctrl.getValue(); // 1.7 模組溫度是否正常(熱顯像)
@@ -500,7 +519,8 @@
       { id: 'clamp', required: true },
       { id: 'near', required: true },
       { id: 'far', required: true },
-      { id: 'thermal', required: item17.status === 'bad' },
+      { id: 'positionDiagram', required: item17.status === 'bad' || item17.status === 'fixed' },
+      { id: 'position1', required: item17.status === 'bad' || item17.status === 'fixed' },
       { id: 'groundAbn', required: hasAbnormalGrounding },
     ];
     photoRules.forEach((rule) => {
@@ -637,7 +657,7 @@
   // ======================================================================
   const CSV_HEADERS = [
     '表單名稱', '電廠名稱', '檢查日期', '檢查人員',
-    ...CHECK_ITEMS.flatMap((it) => [`${it.no}狀態`, `${it.no}備註`]),
+    ...CHECK_ITEMS.map((it) => `${it.no}狀態`),
     '接地量測日期',
     ...Array.from({ length: GROUNDING_ROWS }, (_, i) => [`迴路${i + 1}編號`, `迴路${i + 1}測量值(Ω)`, `迴路${i + 1}結果`, `迴路${i + 1}改善對策`]).flat(),
     '檢修說明', '紀錄建立時間', '最後更新時間',
@@ -645,16 +665,17 @@
 
   function recordToCsvRow(record) {
     const d = record.data || {};
-    const items = CHECK_ITEMS.flatMap((ci) => {
+    const items = CHECK_ITEMS.map((ci) => {
       const found = (d.items || []).find((x) => x.no === ci.no) || {};
-      return [STATUS_LABEL[found.status] || '', found.remark || ''];
+      return STATUS_LABEL[found.status] || '';
     });
     const grounding = [];
     for (let i = 0; i < GROUNDING_ROWS; i++) {
       const r = (d.groundingRows || [])[i] || {};
       grounding.push(r.circuit || '', r.value || '', r.result || '', r.action || '');
     }
-    const repairText = d.repairNote?.noIssue ? '無異常' : (d.repairNote?.text || '');
+    const hasAbnormal = (d.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    const repairText = hasAbnormal ? (d.repairNote?.text || '') : (d.repairNote?.text || '無異常');
     return [
       FORM_TITLE,
       d.meta?.plantName || '',

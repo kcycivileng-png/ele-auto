@@ -44,13 +44,28 @@ const MonitorBoxCheckTemplate = (() => {
   }
 
   function buildRepairNoteText(data) {
-    if (data.repairNote && data.repairNote.noIssue) return '無異常';
+    const hasAbnormal = (data.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    if (!hasAbnormal) return (data.repairNote && data.repairNote.text) || '無異常';
     return (data.repairNote && data.repairNote.text) || '（未填寫）';
   }
 
   function photosOf(data, id) {
     const g = (data.photoGroups || []).find((x) => x.id === id);
     return (g && g.photos) || [];
+  }
+
+  function captionOf(data, id) {
+    const g = (data.photoGroups || []).find((x) => x.id === id);
+    return (g && g.caption) || '';
+  }
+
+  function captionStrip(box, caption) {
+    if (!caption || !box) return '';
+    const y = box.y + box.h - 15;
+    return (
+      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
+      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
+    );
   }
 
   function buildPage1(data, bgDataUrl) {
@@ -73,6 +88,7 @@ const MonitorBoxCheckTemplate = (() => {
 
   function buildPagePhotos(data, bgDataUrl) {
     const images = [];
+    let textHtml = '';
     Object.keys(P_PHOTOS).forEach((id) => {
       const boxes = P_PHOTOS[id];
       photosOf(data, id).forEach((photo, idx) => {
@@ -80,8 +96,12 @@ const MonitorBoxCheckTemplate = (() => {
         if (!box) return;
         images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
       });
+      if (id === 'abnormal' && boxes[0] && boxes[1]) {
+        const combined = { x: boxes[0].x, y: boxes[0].y, w: (boxes[1].x + boxes[1].w) - boxes[0].x, h: boxes[0].h };
+        textHtml += captionStrip(combined, captionOf(data, id));
+      }
     });
-    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
+    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
   return { PAGE_W, PAGE_H, buildPage1, buildPagePhotos, buildRepairNoteText, esc };

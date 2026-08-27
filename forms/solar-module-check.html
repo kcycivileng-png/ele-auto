@@ -83,7 +83,15 @@
     </section>
 
     <section class="section-card">
-      <h2><span class="num">3</span>相片</h2>
+      <h2><span class="num">3</span>檢修說明</h2>
+      <div class="hint" style="margin-bottom:10px;">上面有檢查項目勾選「異常」或「調整/更換」時，請務必在這裡說明；全部勾選正常則不用填，會自動記錄為「無異常」。</div>
+      <div class="field">
+        <textarea id="f-repairNote" placeholder="請描述異常狀況、原因與處理方式…"></textarea>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">4</span>相片</h2>
       <div class="hint" style="margin-bottom:10px;">
         匯出PDF時，照片會完整縮放置入表格框格（不裁切內容），因框格較寬扁，上下或左右可能會有留白屬正常現象。
       </div>
@@ -91,27 +99,28 @@
     </section>
 
     <section class="section-card">
-      <h2><span class="num">4</span>太陽能模組接地連續性量測</h2>
+      <h2><span class="num">5</span>太陽能模組熱顯像檢查</h2>
+      <div class="hint" style="margin-bottom:10px;">
+        <b>測量及判定異常標準</b>（僅供參考，不用填寫）：<br />
+        1.量測時機：日照計讀值&gt;600W/m²、風速&lt;28km/h(約四級風)、日照計每分鐘變化值&lt;100 W/m²。<br />
+        2.抽樣檢查：檢查日期個位數對應之逆變器編號個位數，對應逆變器分佈之太陽能串列，(e.g.檢查日期2021/1/3，抽檢INV3、13、23…，若電廠逆變器數量小於抽檢號碼，則將抽檢日期尾數除與現場逆變器數量後之餘數)。<br />
+        3.異常判定：模組任一塊電池因異物遮陰導致溫度大於周圍40℃、模組任一塊或一串電池因異物遮陰溫度大於周圍平均溫度20℃以上、模組接線盒(Junction Box)較鄰近接線盒溫度&gt;20℃。
+      </div>
+      <div id="thermalPhotoWrap"></div>
+    </section>
+
+    <section class="section-card">
+      <h2><span class="num">6</span>太陽能模組接地連續性量測</h2>
       <div class="field">
         <label class="field-label">該年度量測日期</label>
         <input type="date" id="f-groundingDate" />
       </div>
       <div class="hint" style="margin-bottom:10px;">
-        每499kW/每年抽檢10片，不足499kW依比例計之。第三種接地標準：對地電壓150V以下為100Ω以下，151~300V為50Ω以下，大於301V為10Ω以下。標示不合格請於下方相片欄提供異常照片。表格固定10列，比照原始表單格式。
+        ※檢測以走道周圍可接觸範圍隨機抽檢，每499kW/每年抽檢10片，不足499kW依比例計之。第三種接地標準：對地電壓150V以下為100Ω以下，151~300V為50Ω以下，大於301V為10Ω以下。標示不合格請於下方相片欄提供異常照片。表格固定10列，比照原始表單格式。
       </div>
       <div id="groundingTableWrap"></div>
-    </section>
-
-    <section class="section-card">
-      <h2><span class="num">5</span>檢修說明</h2>
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;">
-          <input type="checkbox" id="f-noIssue" style="width:18px;height:18px;" /> 無異常
-        </label>
-      </div>
-      <div class="field" id="repairNoteField">
-        <label class="field-label">說明內容</label>
-        <textarea id="f-repairNote" placeholder="請描述檢修內容、原因與處理方式…"></textarea>
+      <div style="margin-top:14px;">
+        <div id="groundPhotoWrap"></div>
       </div>
     </section>
 

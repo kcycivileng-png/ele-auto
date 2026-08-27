@@ -30,7 +30,8 @@ const StructureCheckTemplate = (() => {
   }
 
   function buildRepairNoteText(data) {
-    if (data.repairNote && data.repairNote.noIssue) return '無異常';
+    const hasAbnormal = (data.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    if (!hasAbnormal) return (data.repairNote && data.repairNote.text) || '無異常';
     return (data.repairNote && data.repairNote.text) || '（未填寫）';
   }
 

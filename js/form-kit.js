@@ -3,6 +3,8 @@
 const KtFormKit = (() => {
   function createChecklistItem(container, opts) {
     // opts: { label, onChange }
+    // 個別項目不再有備註欄——勾異常/調整更換時，說明統一寫在該表單的「檢修說明」，
+    // 不要求每個項目各自填一次，同一份說明比較好讀，也比較符合現場實際填寫習慣。
     const el = document.createElement('div');
     el.className = 'checklist-item';
     el.innerHTML = `
@@ -12,20 +14,14 @@ const KtFormKit = (() => {
         <button type="button" class="status-btn" data-status="bad">異常</button>
         <button type="button" class="status-btn" data-status="fixed">調整/更換</button>
       </div>
-      <div class="item-remark" hidden>
-        <textarea placeholder="請描述異常狀況或處理方式…"></textarea>
-      </div>
     `;
     container.appendChild(el);
 
     const btns = Array.from(el.querySelectorAll('.status-btn'));
-    const remarkWrap = el.querySelector('.item-remark');
-    const remarkInput = el.querySelector('textarea');
     let status = null;
 
     function applyUI() {
       btns.forEach((b) => (b.dataset.active = String(b.dataset.status === status)));
-      remarkWrap.hidden = !(status === 'bad' || status === 'fixed');
     }
 
     btns.forEach((b) => {
@@ -35,13 +31,11 @@ const KtFormKit = (() => {
         opts.onChange && opts.onChange();
       });
     });
-    remarkInput.addEventListener('input', () => opts.onChange && opts.onChange());
 
     return {
-      getValue: () => ({ status, remark: remarkInput.value.trim() }),
+      getValue: () => ({ status }),
       setValue: (v) => {
         status = (v && v.status) || null;
-        remarkInput.value = (v && v.remark) || '';
         applyUI();
       },
     };

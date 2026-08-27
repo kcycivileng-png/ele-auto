@@ -41,9 +41,7 @@
     plantSite: document.getElementById('f-plantSite'),
     checkDate: document.getElementById('f-checkDate'),
     inspector: document.getElementById('f-inspector'),
-    noIssue: document.getElementById('f-noIssue'),
     repairNote: document.getElementById('f-repairNote'),
-    repairNoteField: document.getElementById('repairNoteField'),
     draftStatus: document.getElementById('draftStatus'),
     toast: document.getElementById('toast'),
 
@@ -121,12 +119,6 @@
     Object.assign({ item }, { ctrl: KtFormKit.createChecklistItem(checklistWrap, { label: item.label, onChange: scheduleAutosave }) })
   );
 
-  function applyNoIssueUI() {
-    els.repairNoteField.style.display = els.noIssue.checked ? 'none' : '';
-  }
-  els.noIssue.addEventListener('change', () => { applyNoIssueUI(); scheduleAutosave(); });
-  applyNoIssueUI();
-
   document.querySelectorAll('#formEditorView input[type=text], #formEditorView input[type=date], #formEditorView textarea').forEach((el) => {
     el.addEventListener('input', scheduleAutosave);
   });
@@ -201,7 +193,7 @@
       formTitle: FORM_TITLE,
       meta: { plantName: '', checkDate: '', inspector: '' },
       items: [],
-      repairNote: { noIssue: false, text: '' },
+      repairNote: { text: '' },
     };
   }
 
@@ -360,7 +352,6 @@
       },
       items: checklistCtrls.map(({ item, ctrl }) => Object.assign({ no: item.no, label: item.label }, ctrl.getValue())),
       repairNote: {
-        noIssue: els.noIssue.checked,
         text: els.repairNote.value.trim(),
       },
     };
@@ -370,13 +361,11 @@
     setPlantName(data.meta?.plantName || '');
     els.checkDate.value = data.meta?.checkDate || '';
     els.inspector.value = data.meta?.inspector || '';
-    els.noIssue.checked = !!data.repairNote?.noIssue;
     els.repairNote.value = data.repairNote?.text || '';
-    applyNoIssueUI();
 
     checklistCtrls.forEach(({ ctrl }, idx) => {
       const saved = (data.items || []).find((it) => it.no === CHECK_ITEMS[idx].no);
-      ctrl.setValue(saved || { status: null, remark: '' });
+      ctrl.setValue(saved || { status: null });
     });
   }
 
@@ -416,9 +405,15 @@
     if (!getPlantName()) missing.push('尚未選擇電廠名稱（請選群組+館別）');
     if (!els.checkDate.value) missing.push('尚未填寫檢查日期');
     if (!els.inspector.value.trim()) missing.push('尚未填寫檢查人員');
+    let hasAbnormal = false;
     checklistCtrls.forEach(({ item, ctrl }) => {
-      if (!ctrl.getValue().status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      const status = ctrl.getValue().status;
+      if (!status) missing.push(`檢查項目 ${item.no} 尚未勾選正常/異常/調整更換`);
+      if (status === 'bad' || status === 'fixed') hasAbnormal = true;
     });
+    if (hasAbnormal && !els.repairNote.value.trim()) {
+      missing.push('有檢查項目勾選「異常」或「調整/更換」，請在「檢修說明」填寫說明');
+    }
     return missing;
   }
 
@@ -518,17 +513,18 @@
 
   const CSV_HEADERS = [
     '表單名稱', '電廠名稱', '檢查日期', '檢查人員',
-    ...CHECK_ITEMS.flatMap((it) => [`${it.no}狀態`, `${it.no}備註`]),
+    ...CHECK_ITEMS.map((it) => `${it.no}狀態`),
     '檢修說明', '紀錄建立時間', '最後更新時間',
   ];
 
   function recordToCsvRow(record) {
     const d = record.data || {};
-    const items = CHECK_ITEMS.flatMap((ci) => {
+    const items = CHECK_ITEMS.map((ci) => {
       const found = (d.items || []).find((x) => x.no === ci.no) || {};
-      return [STATUS_LABEL[found.status] || '', found.remark || ''];
+      return STATUS_LABEL[found.status] || '';
     });
-    const repairText = d.repairNote?.noIssue ? '無異常' : (d.repairNote?.text || '');
+    const hasAbnormal = (d.items || []).some((it) => it.status === 'bad' || it.status === 'fixed');
+    const repairText = hasAbnormal ? (d.repairNote?.text || '') : (d.repairNote?.text || '無異常');
     return [
       FORM_TITLE, d.meta?.plantName || '', d.meta?.checkDate || '', d.meta?.inspector || '',
       ...items, repairText, fmtTs(record.createdAt), fmtTs(record.updatedAt),
