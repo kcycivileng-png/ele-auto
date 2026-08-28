@@ -107,13 +107,13 @@ const AcboxCheckTemplate = (() => {
     return (g && g.caption) || '';
   }
 
-  function captionStrip(box, caption) {
-    if (!caption || !box) return '';
-    const y = box.y + box.h - 15;
-    return (
-      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
-      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
-    );
+  const ABN_LABEL = {
+    thermalAbn1: { x: 203.3, y: 471.8 },
+    thermalAbn2: { x: 448.1, y: 471.8 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
   }
 
   // ---- Page 1（P24）：交流箱檢查表 ----
@@ -148,10 +148,9 @@ const AcboxCheckTemplate = (() => {
     let textHtml = '';
     Object.keys(P_THERMAL).forEach((id) => {
       placeSingle(images, P_THERMAL[id], photoOf(data, id));
-      if (id === 'thermalAbn1' || id === 'thermalAbn2') {
-        textHtml += captionStrip(P_THERMAL[id][0], captionOf(data, id));
-      }
     });
+    textHtml += abnFillText(ABN_LABEL.thermalAbn1, captionOf(data, 'thermalAbn1'));
+    textHtml += abnFillText(ABN_LABEL.thermalAbn2, captionOf(data, 'thermalAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
@@ -182,12 +181,11 @@ const AcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_INSUL.photo[0]], photoOf(data, 'insulAbn1'));
     placeSingle(images, [P_INSUL.photo[1]], photoOf(data, 'insulAbn2'));
-    const captionHtml = captionStrip(P_INSUL.photo[0], captionOf(data, 'insulAbn1')) + captionStrip(P_INSUL.photo[1], captionOf(data, 'insulAbn2'));
     return {
       pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl,
       rects: primary.rects.concat(secondary.rects),
       images,
-      textHtml: primary.textHtml + secondary.textHtml + captionHtml,
+      textHtml: primary.textHtml + secondary.textHtml,
     };
   }
 
@@ -212,7 +210,6 @@ const AcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_GROUND.photo[0]], photoOf(data, 'groundAbn1'));
     placeSingle(images, [P_GROUND.photo[1]], photoOf(data, 'groundAbn2'));
-    textHtml += captionStrip(P_GROUND.photo[0], captionOf(data, 'groundAbn1')) + captionStrip(P_GROUND.photo[1], captionOf(data, 'groundAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }
 

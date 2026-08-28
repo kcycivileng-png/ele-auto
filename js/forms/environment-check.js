@@ -18,7 +18,8 @@
 
   // 原始表格「相片需求：無」，僅保留異常項目相片（異常時提供，非必填）
   const PHOTO_GROUPS = [
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2, caption: true },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };

@@ -23,7 +23,8 @@
   const PHOTO_GROUPS = [
     { id: 'sunSensor', title: '檢查項目-日照計', single: true },
     { id: 'monitorBox', title: '檢查項目-監控箱', max: 2 },
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2, caption: true },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };

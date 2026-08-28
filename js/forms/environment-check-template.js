@@ -16,14 +16,19 @@ const EnvironmentCheckTemplate = (() => {
   const ITEM_ROW_Y = [203.0, 221.5, 240.0, 258.6, 277.1, 295.6, 314.1, 332.6, 351.0, 369.6];
   const REPAIR_NOTE = { x: 59.2, y: 422, w: 480 };
 
-  // 異常項目相片框格座標為估算值（原始表格此區沒有明確格線資料，非必填欄位，
-  // 視覺位置大致正確即可，之後如需更精準可再依實際輸出微調）。
   const PHOTOS = {
-    abnormal: [
-      { x: 59, y: 486, w: 230, h: 85 },
-      { x: 298, y: 486, w: 230, h: 85 },
-    ],
+    abnormal1: [{ x: 59, y: 486, w: 230, h: 85 }],
+    abnormal2: [{ x: 298, y: 486, w: 230, h: 85 }],
   };
+
+  const ABN_LABEL = {
+    abnormal1: { x: 207.5, y: 472.6 },
+    abnormal2: { x: 447.9, y: 472.6 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
+  }
 
   function esc(str) {
     return String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -47,15 +52,6 @@ const EnvironmentCheckTemplate = (() => {
   function captionOf(data, id) {
     const g = (data.photoGroups || []).find((x) => x.id === id);
     return (g && g.caption) || '';
-  }
-
-  function captionStrip(box, caption) {
-    if (!caption || !box) return '';
-    const y = box.y + box.h - 15;
-    return (
-      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
-      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
-    );
   }
 
   function photosOf(data, id) {
@@ -86,11 +82,9 @@ const EnvironmentCheckTemplate = (() => {
         if (!box) return;
         images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
       });
-      if (id === 'abnormal' && boxes[0] && boxes[1]) {
-        const combined = { x: boxes[0].x, y: boxes[0].y, w: (boxes[1].x + boxes[1].w) - boxes[0].x, h: boxes[0].h };
-        textHtml += captionStrip(combined, captionOf(data, id));
-      }
     });
+    textHtml += abnFillText(ABN_LABEL.abnormal1, captionOf(data, 'abnormal1'));
+    textHtml += abnFillText(ABN_LABEL.abnormal2, captionOf(data, 'abnormal2'));
 
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }

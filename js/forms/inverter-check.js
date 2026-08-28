@@ -27,10 +27,10 @@
     { id: 'invPhoto4', title: '檢查項目-INVERTER清潔後外觀 設備4 (選填)', single: true },
     { id: 'invPhoto5', title: '檢查項目-INVERTER清潔後外觀 設備5 (選填)', single: true },
     { id: 'invPhoto6', title: '檢查項目-INVERTER清潔後外觀 設備6 (選填)', single: true },
-    { id: 'invAbn1', title: '檢查項目-異常項目1 (異常時提供，無則免填)', single: true, caption: true },
-    { id: 'invAbn2', title: '檢查項目-異常項目2 (異常時提供，無則免填)', single: true, caption: true },
-    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true, caption: true },
-    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true, caption: true },
+    { id: 'invAbn1', title: '異常項目-1 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'invAbn2', title: '異常項目-2 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true },
+    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true },
   ];
   const MAIN_PHOTO_IDS = ['invPhoto1', 'invPhoto2', 'invPhoto3', 'invPhoto4', 'invPhoto5', 'invPhoto6', 'invAbn1', 'invAbn2'];
   const GROUND_PHOTO_IDS = ['groundAbn1', 'groundAbn2'];

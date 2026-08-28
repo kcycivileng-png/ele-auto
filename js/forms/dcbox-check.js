@@ -29,16 +29,16 @@
     { id: 'thermalVis2', title: '檢查項目-DC BOX熱顯像儀 設備2 (可見光對照相片，選填)', single: true },
     { id: 'thermalIr3', title: '檢查項目-DC BOX熱顯像儀 設備3 (熱顯像相片，選填)', single: true },
     { id: 'thermalVis3', title: '檢查項目-DC BOX熱顯像儀 設備3 (可見光對照相片，選填)', single: true },
-    { id: 'thermalAbn1', title: '檢查項目-熱顯像異常項目1 (異常時提供，無則免填)', single: true, caption: true },
-    { id: 'thermalAbn2', title: '檢查項目-熱顯像異常項目2 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'thermalAbn1', title: '異常項目-1 (異常時提供，無則免填)', single: true, caption: true },
+    { id: 'thermalAbn2', title: '異常項目-2 (異常時提供，無則免填)', single: true, caption: true },
   ];
   const INSUL_PHOTO_GROUPS = [
-    { id: 'insulAbn1', title: '檢查項目-組串絕緣電阻異常1 (異常時提供)', single: true, caption: true },
-    { id: 'insulAbn2', title: '檢查項目-組串絕緣電阻異常2 (異常時提供)', single: true, caption: true },
+    { id: 'insulAbn1', title: '檢查項目-組串絕緣電阻異常1 (異常時提供)', single: true },
+    { id: 'insulAbn2', title: '檢查項目-組串絕緣電阻異常2 (異常時提供)', single: true },
   ];
   const GROUND_PHOTO_GROUPS = [
-    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true, caption: true },
-    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true, caption: true },
+    { id: 'groundAbn1', title: '檢查項目-接地電阻異常1 (異常時提供)', single: true },
+    { id: 'groundAbn2', title: '檢查項目-接地電阻異常2 (異常時提供)', single: true },
   ];
   const ALL_PHOTO_GROUPS = [...THERMAL_PHOTO_GROUPS, ...INSUL_PHOTO_GROUPS, ...GROUND_PHOTO_GROUPS];
 

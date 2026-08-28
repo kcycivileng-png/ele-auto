@@ -21,18 +21,19 @@
     { id: 'clamp', title: '檢查項目-模組壓塊 (拍攝壓塊)', single: true },
     { id: 'near', title: '檢查項目-太陽能板(近) (拍攝髒污程度)', max: 4 },
     { id: 'far', title: '檢查項目-太陽能板(遠) (拍攝整體狀況)', max: 2 },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
   // 熱顯像檢查獨立一區：先給量測/判定標準當參考，再依序拍「溫度異常位置圖」、
   // 「異常位置1」「異常位置2」——每個異常位置各要熱顯像+白光對照2張（依上傳順序對應
-  // 左右框格），並各自附一段文字說明是什麼問題。全部沒有異常時，這3個欄位都可以留空
-  // （原始表格本身「無使用則不刪減表格」）。
+  // 左右框格）。全部沒有異常時，這3個欄位都可以留空（原始表格本身「無使用則不刪減表格」）。
   const THERMAL_PHOTO_GROUPS = [
     { id: 'positionDiagram', title: '檢查項目-溫度異常位置圖（需標示拍攝區塊；無使用則不刪減表格）', single: true },
-    { id: 'position1', title: '異常位置1（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2, caption: true },
-    { id: 'position2', title: '異常位置2（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2, caption: true },
+    { id: 'position1', title: '異常位置1（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2 },
+    { id: 'position2', title: '異常位置2（依序上傳：①熱顯像相片 ②白光對照相片）', max: 2 },
   ];
   const GROUND_PHOTO_GROUPS = [
-    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', single: true, caption: true },
+    { id: 'groundAbn', title: '檢查項目-接地連續性異常照片 (異常時提供)', single: true },
   ];
   const PHOTO_GROUPS = [...ROUTINE_PHOTO_GROUPS, ...THERMAL_PHOTO_GROUPS, ...GROUND_PHOTO_GROUPS];
 

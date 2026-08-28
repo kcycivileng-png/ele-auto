@@ -23,11 +23,18 @@ const CleaningCheckTemplate = (() => {
       { x: 53.6, y: 372.6, w: 234.2, h: 115.0 },
       { x: 287.8, y: 372.6, w: 254.2, h: 115.0 },
     ],
-    abnormal: [
-      { x: 53.6, y: 503.7, w: 234.2, h: 114.5 },
-      { x: 287.8, y: 503.7, w: 254.2, h: 114.5 },
-    ],
+    abnormal1: [{ x: 53.6, y: 503.7, w: 234.2, h: 114.5 }],
+    abnormal2: [{ x: 287.8, y: 503.7, w: 254.2, h: 114.5 }],
   };
+
+  const ABN_LABEL = {
+    abnormal1: { x: 203.2, y: 489.8 },
+    abnormal2: { x: 448.2, y: 489.8 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
+  }
 
   function esc(str) {
     return String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -58,15 +65,6 @@ const CleaningCheckTemplate = (() => {
     return (g && g.caption) || '';
   }
 
-  function captionStrip(box, caption) {
-    if (!caption || !box) return '';
-    const y = box.y + box.h - 15;
-    return (
-      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
-      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
-    );
-  }
-
   function buildPage1(data, bgDataUrl) {
     const rects = [];
     (data.items || []).forEach((it, idx) => {
@@ -90,11 +88,9 @@ const CleaningCheckTemplate = (() => {
         if (!box) return;
         images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
       });
-      if (id === 'abnormal' && boxes[0] && boxes[1]) {
-        const combined = { x: boxes[0].x, y: boxes[0].y, w: (boxes[1].x + boxes[1].w) - boxes[0].x, h: boxes[0].h };
-        textHtml += captionStrip(combined, captionOf(data, id));
-      }
     });
+    textHtml += abnFillText(ABN_LABEL.abnormal1, captionOf(data, 'abnormal1'));
+    textHtml += abnFillText(ABN_LABEL.abnormal2, captionOf(data, 'abnormal2'));
 
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }

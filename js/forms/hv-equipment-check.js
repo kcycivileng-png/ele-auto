@@ -24,7 +24,8 @@
     { id: 'ptVisible', title: '檢查項目-PT盤可見光', single: true },
     { id: 'transformerTemp', title: '檢查項目-變壓器溫度', single: true },
     { id: 'transformerOil', title: '檢查項目-變壓器油量', single: true },
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2, caption: true },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
   const REQUIRED_PHOTO_IDS = ['overview', 'mpThermal', 'mpVisible', 'vcb', 'ptThermal', 'ptVisible', 'transformerTemp', 'transformerOil'];
 

@@ -12,7 +12,8 @@
 
   const PHOTO_GROUPS = [
     { id: 'cleaningEquip', title: '檢查項目-清洗設備', max: 2 },
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2 },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };

@@ -112,14 +112,15 @@ const DcboxCheckTemplate = (() => {
     return (g && g.caption) || '';
   }
 
-  // 「異常項目」相片框格原始表格沒有文字說明欄，疊一條淺底文字在照片底部當標註。
-  function captionStrip(box, caption) {
-    if (!caption || !box) return '';
-    const y = box.y + box.h - 15;
-    return (
-      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
-      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
-    );
+  // 「異常項目-」原始表格上就是空白待填的標籤，使用者填的類型直接接在標籤文字後面
+  // （例如「異常項目-直流箱」），座標取自標籤右緣。
+  const ABN_LABEL = {
+    thermalAbn1: { x: 200.7, y: 471.8 },
+    thermalAbn2: { x: 448.2, y: 471.8 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
   }
 
   // ---- Page 1（P20）：直流箱檢查表 ----
@@ -154,10 +155,9 @@ const DcboxCheckTemplate = (() => {
     let textHtml = '';
     Object.keys(P_THERMAL).forEach((id) => {
       placeSingle(images, P_THERMAL[id], photoOf(data, id));
-      if (id === 'thermalAbn1' || id === 'thermalAbn2') {
-        textHtml += captionStrip(P_THERMAL[id][0], captionOf(data, id));
-      }
     });
+    textHtml += abnFillText(ABN_LABEL.thermalAbn1, captionOf(data, 'thermalAbn1'));
+    textHtml += abnFillText(ABN_LABEL.thermalAbn2, captionOf(data, 'thermalAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
@@ -187,7 +187,7 @@ const DcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_INSUL.photo[0]], photoOf(data, 'insulAbn1'));
     placeSingle(images, [P_INSUL.photo[1]], photoOf(data, 'insulAbn2'));
-    const textHtml = built.textHtml + captionStrip(P_INSUL.photo[0], captionOf(data, 'insulAbn1')) + captionStrip(P_INSUL.photo[1], captionOf(data, 'insulAbn2'));
+    const textHtml = built.textHtml;
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: built.rects, images, textHtml };
   }
 
@@ -197,7 +197,7 @@ const DcboxCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_GROUND.photo[0]], photoOf(data, 'groundAbn1'));
     placeSingle(images, [P_GROUND.photo[1]], photoOf(data, 'groundAbn2'));
-    const textHtml = built.textHtml + captionStrip(P_GROUND.photo[0], captionOf(data, 'groundAbn1')) + captionStrip(P_GROUND.photo[1], captionOf(data, 'groundAbn2'));
+    const textHtml = built.textHtml;
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: built.rects, images, textHtml };
   }
 

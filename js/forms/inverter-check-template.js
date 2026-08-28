@@ -86,13 +86,13 @@ const InverterCheckTemplate = (() => {
     return (g && g.caption) || '';
   }
 
-  function captionStrip(box, caption) {
-    if (!caption || !box) return '';
-    const y = box.y + box.h - 15;
-    return (
-      `<div style="position:absolute;left:${box.x}px;top:${y}px;width:${box.w}px;height:15px;background:rgba(255,255,255,0.82);"></div>` +
-      textDiv(box.x + 2, y + 1, box.w - 4, caption, { size: 8.5, autofit: true, h: 13, min: 6.5 })
-    );
+  const ABN_LABEL = {
+    invAbn1: { x: 203.3, y: 534.2 },
+    invAbn2: { x: 448.1, y: 534.2 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
   }
 
   // ---- Page 1（P28）：逆變器檢查表 ----
@@ -128,10 +128,9 @@ const InverterCheckTemplate = (() => {
     let textHtml = '';
     Object.keys(P_PHOTOS).forEach((id) => {
       placeSingle(images, P_PHOTOS[id], photoOf(data, id));
-      if (id === 'invAbn1' || id === 'invAbn2') {
-        textHtml += captionStrip(P_PHOTOS[id][0], captionOf(data, id));
-      }
     });
+    textHtml += abnFillText(ABN_LABEL.invAbn1, captionOf(data, 'invAbn1'));
+    textHtml += abnFillText(ABN_LABEL.invAbn2, captionOf(data, 'invAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
@@ -156,7 +155,6 @@ const InverterCheckTemplate = (() => {
     const images = [];
     placeSingle(images, [P_GROUND.photo[0]], photoOf(data, 'groundAbn1'));
     placeSingle(images, [P_GROUND.photo[1]], photoOf(data, 'groundAbn2'));
-    textHtml += captionStrip(P_GROUND.photo[0], captionOf(data, 'groundAbn1')) + captionStrip(P_GROUND.photo[1], captionOf(data, 'groundAbn2'));
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects, images, textHtml };
   }
 

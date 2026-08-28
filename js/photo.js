@@ -41,9 +41,9 @@ const KtPhoto = (() => {
    *   single: true 時只能有一張照片，選新的會直接取代舊的（不需要先手動刪除）。
    *   max: 上限張數（例如原始表格裡「太陽能板(近)」實際有4格，就設 max:4），
    *        超過上限的部分會被忽略，並在按鈕旁顯示「目前張數/上限」。
-   *   caption: true 時額外提供一個文字欄，用於「異常項目」這類欄位——原始表格上只有
-   *        「異常項目-」的空白框格，使用者需要自己說明這張照片是什麼問題，不能只丟一張
-   *        照片沒有文字說明。
+   *   caption: true 時額外提供一個單行文字欄，用於原始表格上「異常項目-」這種空白框格——
+   *        使用者只需填一個簡短類型（例如「直流箱」），列印PDF時會直接接在「異常項目-」
+   *        後面（例如「異常項目-直流箱」），不是描述整段異常內容。
    */
   function createPhotoGroup(container, opts) {
     const wrap = document.createElement('div');
@@ -52,7 +52,7 @@ const KtPhoto = (() => {
     wrap.innerHTML = `
       <div class="pg-title">${opts.title}</div>
       ${opts.hint ? `<div class="hint">${opts.hint}</div>` : ''}
-      ${opts.caption ? '<textarea class="pg-caption" placeholder="請描述異常內容…" maxlength="60"></textarea>' : ''}
+      ${opts.caption ? '<input type="text" class="pg-caption" placeholder="填寫類型，例如：直流箱" maxlength="20" />' : ''}
       <div class="photo-thumbs"></div>
       <label class="photo-add-btn">
         📷 ${opts.single ? '拍照/選取照片' : '新增照片'}${opts.max ? `<span class="pg-count"></span>` : ''}

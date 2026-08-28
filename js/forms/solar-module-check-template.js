@@ -23,9 +23,8 @@ const SolarModuleCheckTemplate = (() => {
     repairNote: { x: 55.6, y: 442, w: 486 },
   };
 
-  // P17 相片框格頁：只用得到「模組支架/模組壓塊/太陽能板近拍/太陽能板遠拍」這4個
-  // App裡的相片欄位跟原始表格框格數量一一對應：模組支架/模組壓塊各1格，
-  // 太陽能板(近)4格、太陽能板(遠)2格。異常項目那2格保留給人工事後補充，不由App填入。
+  // P17 相片框格頁：模組支架/模組壓塊各1格，太陽能板(近)4格、太陽能板(遠)2格，
+  // 最下面一列是「異常項目-」空白待填標籤2格（異常時提供，非必填）。
   const LEFT_X = 58.2, LEFT_W = 224.0;
   const RIGHT_X = 293.0, RIGHT_W = 244.5;
   const P_PHOTOS = {
@@ -41,7 +40,17 @@ const SolarModuleCheckTemplate = (() => {
       { x: LEFT_X, y: 494.2, w: LEFT_W, h: 113.5 },
       { x: RIGHT_X, y: 494.2, w: RIGHT_W, h: 113.5 },
     ],
+    abnormal1: [{ x: LEFT_X, y: 624.1, w: LEFT_W, h: 113.5 }],
+    abnormal2: [{ x: RIGHT_X, y: 624.1, w: RIGHT_W, h: 113.5 }],
   };
+  const ABN_LABEL = {
+    abnormal1: { x: 203.2, y: 609.9 },
+    abnormal2: { x: 448.2, y: 609.9 },
+  };
+  function abnFillText(pos, value) {
+    if (!value || !pos) return '';
+    return textDiv(pos.x + 2, pos.y, 90, value, { size: 12, nowrap: true, autofitW: true, min: 7 });
+  }
 
   // P18 熱顯像頁：溫度異常位置圖(1格) + 異常位置1/2 各2格(熱顯像+白光對照)，共5格。
   // 「測量及判定異常標準」是原始文件本身的固定說明文字，直接印在底圖上，不需要程式疊字。
@@ -103,6 +112,11 @@ const SolarModuleCheckTemplate = (() => {
     return (g && g.photos) || [];
   }
 
+  function captionOf(data, id) {
+    const g = (data.photoGroups || []).find((x) => x.id === id);
+    return (g && g.caption) || '';
+  }
+
   // ---- Page 1（P16）：太陽能模組設備檢查表 ----
   function buildPage1(data, bgDataUrl) {
     const rects = [];
@@ -138,7 +152,10 @@ const SolarModuleCheckTemplate = (() => {
         images.push({ dataUrl: photo, x: box.x, y: box.y, w: box.w, h: box.h });
       });
     });
-    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml: '' };
+    let textHtml = '';
+    textHtml += abnFillText(ABN_LABEL.abnormal1, captionOf(data, 'abnormal1'));
+    textHtml += abnFillText(ABN_LABEL.abnormal2, captionOf(data, 'abnormal2'));
+    return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }
 
   // ---- Page 3（P18）：太陽能模組熱顯像檢查 ----
@@ -156,15 +173,6 @@ const SolarModuleCheckTemplate = (() => {
       const visibleBox = P_THERMAL[`${id}Visible`];
       if (photos[0]) images.push({ dataUrl: photos[0], x: thermalBox.x, y: thermalBox.y, w: thermalBox.w, h: thermalBox.h });
       if (photos[1]) images.push({ dataUrl: photos[1], x: visibleBox.x, y: visibleBox.y, w: visibleBox.w, h: visibleBox.h });
-      const g = (data.photoGroups || []).find((x) => x.id === id);
-      if (g && g.caption) {
-        // 原始表格本身沒有「異常說明」欄位，疊一條淺底文字在照片底部當標註，
-        // 不新增底圖以外的排版結構。
-        const capW = (visibleBox.x + visibleBox.w) - thermalBox.x;
-        const capY = thermalBox.y + thermalBox.h - 15;
-        textHtml += `<div style="position:absolute;left:${thermalBox.x}px;top:${capY}px;width:${capW}px;height:15px;background:rgba(255,255,255,0.82);"></div>`;
-        textHtml += textDiv(thermalBox.x + 2, capY + 1, capW - 4, g.caption, { size: 8.5, autofit: true, h: 13, min: 6.5 });
-      }
     });
     return { pageW: PAGE_W, pageH: PAGE_H, background: bgDataUrl, rects: [], images, textHtml };
   }

@@ -1,6 +1,6 @@
 // 每次發布新版本時，務必修改這個版本字串，
 // 才能讓使用者手機上的舊快取被清掉、抓到新版內容。
-const CACHE_VERSION = 'v1.25.0';
+const CACHE_VERSION = 'v1.26.0';
 const CACHE_NAME = `kt-om-forms-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [

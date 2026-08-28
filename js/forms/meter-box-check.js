@@ -11,7 +11,8 @@
   const PHOTO_GROUPS = [
     { id: 'meterReading', title: '檢查項目-電錶顯示序號109之讀值', hint: '無需手板', single: true },
     { id: 'meterBox', title: '檢查項目-躉售表箱', hint: '手板上需寫109之讀值×倍數', single: true },
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2, caption: true },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };

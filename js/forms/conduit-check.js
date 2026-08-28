@@ -15,7 +15,8 @@
     { id: 'cableTrough', title: '檢查項目-線槽', max: 2 },
     { id: 'pipe', title: '檢查項目-管線(PVC管 OR 金屬軟管)', max: 2 },
     { id: 'cable', title: '檢查項目-電纜線(PV線)', max: 2 },
-    { id: 'abnormal', title: '異常項目相片（異常時提供，非必填）', max: 2, caption: true },
+    { id: 'abnormal1', title: '異常項目-1（異常時提供，非必填）', single: true, caption: true },
+    { id: 'abnormal2', title: '異常項目-2（異常時提供，非必填）', single: true, caption: true },
   ];
 
   const STATUS_LABEL = { ok: '正常', bad: '異常', fixed: '調整/更換' };
