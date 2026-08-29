@@ -7,10 +7,23 @@
 // 完全存不到檔案，屬於更嚴重的迴歸，所以改回「優先分享、退回下載」這個原本就驗證過
 // 在iOS上能正常運作的方式。
 const KtShare = (() => {
+  // 只有手機（iOS/Android，含iPadOS）才需要靠原生分享選單來存檔，因為那些平台的
+  // <a download>對blob網址支援很差。桌機（Windows/Mac/Linux）點<a download>就會
+  // 正常存進「下載」資料夾，改用分享選單反而是多一層——桌機的Windows原生分享面板
+  // 只能分享給App/聯絡人，沒有「存到資料夾」選項，使用者複製出來的檔案貼到
+  // 桌面等資料夾會失敗。所以桌機一律直接下載，不要走分享選單。
+  function isMobileDevice() {
+    const ua = navigator.userAgent || '';
+    if (/Android|iPhone|iPod|iPad/i.test(ua)) return true;
+    // iPadOS 13+ 的 UA 會偽裝成 Macintosh，要靠多點觸控來分辨是不是真的 iPad。
+    if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+
   async function shareOrSaveFile(blob, filename, mimeType) {
     const file = new File([blob], filename, { type: mimeType });
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    if (isMobileDevice() && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         // 故意不帶 title/text：帶了的話，分享到LINE等App時容易被當成一則
         // 附加文字訊息（檔名）先送出，使用者只想要單純分享檔案本身。
